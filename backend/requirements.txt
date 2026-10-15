@@ -1,0 +1,10 @@
+# Runtime dependencies, pinned. The auth stack (bcrypt + itsdangerous) mirrors jaah-ai/jaah's.
+fastapi==0.142.4
+starlette==1.7.0
+uvicorn[standard]==0.54.0
+sqlalchemy==2.0.54
+psycopg[binary]==3.3.6
+alembic==1.20.0
+bcrypt==5.0.0
+itsdangerous==2.2.0
+pydantic[email]==2.12.5

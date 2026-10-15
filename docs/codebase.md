@@ -1,0 +1,96 @@
+# Codebase guide
+
+The orientation for anyone (person or agent) changing this repo. The run commands themselves are in
+[README.md](../README.md); the hard rules are in [CLAUDE.md](../CLAUDE.md).
+
+## What it is
+
+A starter web app with working accounts: visitors sign up with an email and password, log in and log out,
+and see two placeholder pages (Home, Profile) only while logged in. It has no product features yet; it is
+the base to build them on. The login/logout design is a trimmed copy of the one in `jaah-ai/jaah`.
+
+## Layout
+
+| Path | What |
+|---|---|
+| `backend/app/main.py` | FastAPI app: mounts the routers, `GET /api/health` (checks the database) |
+| `backend/app/auth.py` | Password hashing, session cookie, `current_user` dependency |
+| `backend/app/routes/auth.py` | `POST /api/auth/signup`, `/login`, `/logout`; `GET /api/auth/me` |
+| `backend/app/models.py` | SQLAlchemy tables (`users`) |
+| `backend/app/db.py`, `backend/app/config.py` | Engine/session dependency; settings from env vars |
+| `backend/migrations/` | Alembic revisions — applied automatically when the backend container starts |
+| `backend/tests/` | pytest suite (`test_*.py`) and the end-to-end `smoke.py` |
+| `frontend/src/auth.tsx` | `AuthProvider` / `useAuth()`: current user, login, signup, logout |
+| `frontend/src/api.ts` | `get` / `post` JSON helpers; errors become `ApiError` |
+| `frontend/src/App.tsx` | Routes: public `/login`, `/signup`; `/` and `/profile` behind `RequireAuth` |
+| `frontend/src/pages/`, `frontend/src/components/` | Pages and the shared layout, form and login guard |
+| `frontend/src/styles.css` | All styling (plain CSS, no framework) |
+| `docker-compose.yml`, `*/Dockerfile` | The local stack: `db`, `backend`, `frontend` |
+| `dc` | The one entry point for the stack and the two gates |
+
+## How it runs
+
+`./dc up` builds two images and starts three containers:
+
+- **db** — Postgres 17; data in the named volume `<project>-pgdata`, which survives `./dc down`.
+- **backend** — runs `alembic upgrade head`, then `uvicorn --reload`. `backend/app`, `migrations` and
+  `tests` are bind-mounted, so Python edits reload live.
+- **frontend** — the Vite dev server. `frontend/src` and `index.html` are bind-mounted (hot reload). It
+  proxies `/api/*` to the backend, so the browser talks to one origin and the cookie needs no CORS.
+
+A change to `requirements*.txt`, `package.json`, a Dockerfile or `vite.config.ts` needs a rebuild:
+`./dc up` always rebuilds (cached), and both gates build first.
+
+## How it is tested
+
+| Suite | Runs in | Covers |
+|---|---|---|
+| `ruff check` + `ruff format --check` | quick | Python lint and formatting (config in `backend/pyproject.toml`) |
+| `pytest` (`backend/tests/test_*.py`) | quick | Sign-up, login, logout, cookie tampering, health — against in-memory SQLite |
+| `tsc` | quick | Frontend type-check |
+| `vitest` (`frontend/src/*.test.tsx`) | quick | Login redirect and login/logout flow with a mocked backend |
+| `vite build` | full | The production bundle builds |
+| `backend/tests/smoke.py` | full | Real stack end to end: frontend proxy → API → Postgres (signup, me, logout, login) |
+
+Not covered yet: browser-level end-to-end tests (e.g. Playwright) and any migration-vs-model drift check.
+
+## Login and sessions
+
+- A session is an **HttpOnly, SameSite=Lax cookie** holding a signed, timestamped `{user_id, epoch}`
+  (itsdangerous, 7-day expiry). It is `Secure` unless `APP_ENV=local` with a plain-http `FRONTEND_URL`.
+- **Logout ends the session everywhere** by incrementing `users.session_epoch`; every cookie carrying an
+  older epoch is refused by `current_user`.
+- Passwords are **bcrypt**-hashed (input truncated to bcrypt's 72-byte limit). Rule: 8–128 characters,
+  single-homed in `password_problem`.
+- Login answers an unknown email and a wrong password **identically, at the same bcrypt cost** (a dummy
+  hash), so it does not reveal which emails have accounts. Sign-up necessarily does reveal a taken email
+  (409).
+- Emails are stored lower-cased; the unique index therefore behaves case-insensitively.
+- The backend **refuses to start** with the built-in dev signing key unless `APP_ENV=local` and
+  `FRONTEND_URL` is a localhost URL; outside local, `SESSION_SECRET` must be at least 32 characters. The
+  API docs (`/docs`) are served only when `APP_ENV=local`.
+- Protect a new API route with `user: User = Depends(current_user)`; protect a new page by placing its
+  `<Route>` inside the `RequireAuth` element in `App.tsx`.
+
+Deliberately left out of this basic version (present in jaah): rate limiting / lockout, password reset,
+email verification, MFA and OAuth sign-in. CSRF protection rests on SameSite=Lax plus JSON-only bodies; an
+Origin check would also cover a hostile sibling subdomain. The local stack (compose file, dev Dockerfiles)
+is not a production deployment.
+
+## Conventions
+
+- Python: typed, small modules, ruff-formatted (line length 110); FastAPI dependencies for the session and
+  the current user; error `detail` values are short snake_case codes the frontend maps to messages
+  (`frontend/src/components/AuthForm.tsx`).
+- TypeScript: strict mode, function components and hooks, React Router v6 with v7 future flags on.
+- Every setting is an env var with a working local default, documented in `.env.example`.
+
+## Landmines
+
+- The tests use **SQLite**, not Postgres: Postgres-only behaviour is exercised only by `./dc check full`.
+- Changing a model without a migration passes the unit tests (they call `create_all`) but breaks the real
+  stack — the full gate's smoke test is what catches it.
+- The Vite dev server only answers the host names it allows (`localhost` and the compose service name
+  `frontend`, set in `vite.config.ts`); a new hostname gets HTTP 403.
+- `./dc` deliberately ignores `COMPOSE_PROJECT_NAME`, `*_PORT` and `FRONTEND_URL` exported in your shell;
+  set them in `.env` instead.
