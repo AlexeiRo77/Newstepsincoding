@@ -51,6 +51,10 @@ const hms = (deg: number) => {
   return `${Math.floor(total / 3600)}h ${pad(Math.floor(total / 60) % 60)}m ${pad(total % 60)}s`
 }
 
+// A star's best label: proper name, else catalogue designation, else its BSC number.
+const starLabel = (s: { name: string; designation?: string; hr?: number }) =>
+  s.name || s.designation || `HR ${s.hr}`
+
 // Pixel value → display brightness. Values are linear in magnitude (1 = faintest naked-eye star,
 // 255 = the Sun); a square root lifts the faint stars so they stay visible on screen.
 function shade(value: number): number {
@@ -160,10 +164,17 @@ export default function Sky() {
     const r = e.currentTarget.getBoundingClientRect()
     const az = ((e.clientX - r.left) / r.width) * 360
     const alt = 90 - ((e.clientY - r.top) / r.height) * 180
-    const near = [{ ...sun, name: 'Sun' }, { ...moon, name: 'Moon' }, ...stars].find(
-      (o) => Math.abs(o.alt - alt) < 1.5 && Math.abs(((o.az - az + 540) % 360) - 180) < 1.5,
-    )
-    const label = near ? ` — ${near.name || (near as Star).designation} (mag ${fmt(near.vmag)})` : ''
+    let near: { name: string; vmag: number } | null = null
+    let best = 1.5 // degrees
+    for (const o of [{ ...sun, name: 'Sun' }, { ...moon, name: 'Moon' }, ...stars]) {
+      const dAz = (((o.az - az + 540) % 360) - 180) * Math.cos((alt * Math.PI) / 180)
+      const d = Math.hypot(o.alt - alt, dAz)
+      if (d < best) {
+        best = d
+        near = { name: starLabel(o), vmag: o.vmag }
+      }
+    }
+    const label = near ? ` — ${near.name} (mag ${fmt(near.vmag)})` : ''
     setCursor(`alt ${fmt(alt, 1)}°, az ${fmt(az, 1)}°${label}`)
   }
 
@@ -251,7 +262,7 @@ export default function Sky() {
             {listed.map((s) => (
               <tr key={s.hr} className={s.alt < 0 ? 'below' : undefined}>
                 <td>
-                  {s.name || s.designation || `HR ${s.hr}`}
+                  {starLabel(s)}
                   {s.name && <span className="muted"> {s.designation}</span>}
                 </td>
                 <td>{fmt(s.alt)}°</td>
@@ -268,8 +279,8 @@ export default function Sky() {
         <button onClick={() => setShowAll(true)}>Show all {stars.length.toLocaleString('en')} stars</button>
       )}
       <p className="muted small">
-        Grey rows are below the horizon. Altitudes are geometric (no atmospheric refraction); the Moon&apos;s is as
-        seen from the ground.
+        Grey rows are below the horizon. Altitudes are geometric (no atmospheric refraction). The Moon&apos;s altitude is as
+        seen from the ground; its RA and Dec are geocentric.
       </p>
     </div>
   )

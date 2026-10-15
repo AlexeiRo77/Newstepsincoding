@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import base64
 import csv
+import re
 from datetime import UTC, datetime, timedelta, timezone
 from functools import cache
 from pathlib import Path
@@ -42,6 +43,11 @@ def _body(b: astro.Body) -> dict:
     return out
 
 
+def _designation(raw: str) -> str:
+    """BSC packs Flamsteed number, Bayer letter and constellation ("9Alp CMa"); space them out."""
+    return re.sub(r"^(\d+)(?=[A-Z])", r"\1 ", re.sub(r"\s+", " ", raw))
+
+
 @cache
 def sky() -> dict:
     obs = astro.Observer(LATITUDE, LONGITUDE, MOMENT)
@@ -62,7 +68,7 @@ def sky() -> dict:
             stars.append(
                 {
                     "hr": int(row["hr"]),
-                    "designation": row["designation"],
+                    "designation": _designation(row["designation"]),
                     "name": row["name"],
                     "alt": round(alt, 3),
                     "az": round(az, 3),

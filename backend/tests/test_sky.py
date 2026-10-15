@@ -79,3 +79,9 @@ def test_endpoint_requires_login(client):
     r = client.get("/api/sky")
     assert r.status_code == 200
     assert r.json()["observer"]["utc_time"] == "1977-02-03T15:35:00+00:00"
+
+
+def test_designations_are_readable():
+    sirius = next(s for s in sky()["stars"] if s["name"] == "Sirius")
+    assert sirius["designation"] == "9 Alp CMa"
+    assert not any("  " in s["designation"] for s in sky()["stars"])
