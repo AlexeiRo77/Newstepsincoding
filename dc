@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# dc — one command for the local stack and the checks. Run from anywhere; it works on this checkout.
+#
+#   ./dc up            start Postgres, backend and frontend (http://localhost:${FRONTEND_PORT:-5173})
+#   ./dc down          stop the stack (your database is kept)
+#   ./dc reset         stop the stack AND delete the database (asks first)
+#   ./dc ps | logs [service] | build
+#   ./dc check quick   lint, type-check and unit tests (backend + frontend)
+#   ./dc check full    quick + production build + end-to-end smoke test on the running stack
+#
+# Needs only Docker. Ports and the stack name default as in docker-compose.yml; a .env file
+# (see .env.example) may override them.
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+cd "$ROOT"
+
+# The variables that identify WHICH stack this checkout runs come from this checkout's .env (or the
+# defaults) — never from a value exported in the shell, which may belong to another checkout.
+IDENTITY_VARS=(COMPOSE_PROJECT_NAME DB_PORT API_PORT FRONTEND_PORT FRONTEND_URL)
+env_file_value() { [ -f .env ] && sed -n "s/^$1=//p" .env | tail -n1; }
+for var in "${IDENTITY_VARS[@]}"; do
+  from_file="$(env_file_value "$var" || true)"
+  if [ -n "${!var:-}" ] && [ "${!var}" != "$from_file" ]; then
+    echo "dc: ignoring $var=${!var} from the shell; using this checkout's .env/defaults" >&2
+  fi
+  if [ -n "$from_file" ]; then export "$var=$from_file"; else unset "$var"; fi
+done
+# The browser URL follows the frontend port unless .env says otherwise.
+export FRONTEND_URL="${FRONTEND_URL:-http://localhost:${FRONTEND_PORT:-5173}}"
+
+dco() { docker compose "$@"; }
+
+check_quick() {
+  dco build backend frontend
+  echo "== backend: ruff, pytest"
+  dco run --rm --no-deps -T backend sh -c \
+    "ruff check --no-cache . && ruff format --check --no-cache . && pytest -q -p no:cacheprovider"
+  echo "== frontend: typecheck, vitest"
+  dco run --rm --no-deps -T frontend sh -c "npm run typecheck && npm test"
+}
+
+check_full() {
+  check_quick
+  echo "== frontend: production build"
+  dco run --rm --no-deps -T frontend npm run build
+  echo "== stack: end-to-end smoke"
+  local was_up=""
+  [ -n "$(dco ps -q --status running backend 2>/dev/null)" ] && was_up=1
+  dco up -d --wait
+  local rc=0
+  dco exec -T backend python tests/smoke.py http://frontend:5173 || rc=$?
+  [ -n "$was_up" ] || dco down
+  return "$rc"
+}
+
+gate() {
+  local tier="$1" rc=0
+  case "$tier" in
+    quick) check_quick || rc=$? ;;
+    full) check_full || rc=$? ;;
+    *) echo "usage: ./dc check {quick|full}" >&2; exit 2 ;;
+  esac
+  if [ "$rc" -eq 0 ]; then echo "GATE $tier: PASS"; else echo "GATE $tier: FAIL"; fi
+  return "$rc"
+}
+
+cmd="${1:-help}"
+[ $# -gt 0 ] && shift
+case "$cmd" in
+  up) dco up -d --build --wait "$@" && echo "App: $FRONTEND_URL" ;;
+  down) dco down "$@" ;;  # never -v: the database volume survives
+  reset)
+    read -r -p "Delete this stack's database? Type 'yes': " answer
+    if [ "$answer" = "yes" ]; then dco down -v; else echo "Cancelled."; fi
+    ;;
+  ps | logs | build) dco "$cmd" "$@" ;;
+  check) gate "${1:-quick}" ;;
+  help | -h | --help) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//' ;;
+  *) echo "dc: unknown command '$cmd' (try ./dc help)" >&2; exit 2 ;;
+esac
