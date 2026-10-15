@@ -64,3 +64,16 @@ button:disabled { opacity: 0.6; cursor: default; }
 dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; }
 dt { color: var(--muted); }
 dd { margin: 0; overflow-wrap: anywhere; }
+
+.page:has(.sky) { max-width: 1100px; }
+.sky h2 { margin-top: 28px; font-size: 1.15rem; }
+.sky .small { font-size: 0.85rem; }
+.lightmap { display: block; width: 100%; height: auto; border-radius: 6px; background: #05070f; cursor: crosshair; }
+.lightmap-readout { font-variant-numeric: tabular-nums; min-height: 1.4em; margin: 6px 0 0; }
+.table-scroll { overflow-x: auto; }
+.positions { border-collapse: collapse; width: 100%; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+.positions th, .positions td { padding: 6px 10px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.positions th:first-child, .positions td:first-child { text-align: left; }
+.positions th { color: var(--muted); font-weight: 600; }
+.positions tr.below td { color: var(--muted); }
+.sky > button { margin-top: 12px; }

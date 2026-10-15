@@ -23,6 +23,7 @@ export default function Layout() {
             Home
           </NavLink>
           <NavLink to="/profile">Profile</NavLink>
+          <NavLink to="/sky">Sky 1977</NavLink>
         </nav>
         <span className="muted">{user?.email}</span>
         <button onClick={onLogout}>Log out</button>

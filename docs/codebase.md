@@ -16,13 +16,16 @@ the base to build them on. The login/logout design is a trimmed copy of the one 
 | `backend/app/main.py` | FastAPI app: mounts the routers, `GET /api/health` (checks the database) |
 | `backend/app/auth.py` | Password hashing, session cookie, `current_user` dependency |
 | `backend/app/routes/auth.py` | `POST /api/auth/signup`, `/login`, `/logout`; `GET /api/auth/me` |
+| `backend/app/routes/sky.py` | `GET /api/sky` (login required): Sun, Moon and naked-eye stars over Almaty at 1977-02-03 21:35 (UTC+6), plus the light map |
+| `backend/app/sky/` | Pure-Python astronomy (`astro.py`, Meeus algorithms), light-map rendering and encoding (`lightmap.py`), star catalogue (`bright_stars.csv`, Yale BSC5 trimmed) |
 | `backend/app/models.py` | SQLAlchemy tables (`users`) |
 | `backend/app/db.py`, `backend/app/config.py` | Engine/session dependency; settings from env vars |
 | `backend/migrations/` | Alembic revisions — applied automatically when the backend container starts |
 | `backend/tests/` | pytest suite (`test_*.py`) and the end-to-end `smoke.py` |
 | `frontend/src/auth.tsx` | `AuthProvider` / `useAuth()`: current user, login, signup, logout |
 | `frontend/src/api.ts` | `get` / `post` JSON helpers; errors become `ApiError` |
-| `frontend/src/App.tsx` | Routes: public `/login`, `/signup`; `/` and `/profile` behind `RequireAuth` |
+| `frontend/src/App.tsx` | Routes: public `/login`, `/signup`; `/`, `/profile` and `/sky` behind `RequireAuth` |
+| `frontend/src/pages/Sky.tsx` | The 1977 sky page: draws the light map on a canvas and lists the positions |
 | `frontend/src/pages/`, `frontend/src/components/` | Pages and the shared layout, form and login guard |
 | `frontend/src/styles.css` | All styling (plain CSS, no framework) |
 | `docker-compose.yml`, `*/Dockerfile` | The local stack: `db`, `backend`, `frontend` |
@@ -46,9 +49,9 @@ A change to `requirements*.txt`, `package.json`, a Dockerfile or `vite.config.ts
 | Suite | Runs in | Covers |
 |---|---|---|
 | `ruff check` + `ruff format --check` | quick | Python lint and formatting (config in `backend/pyproject.toml`) |
-| `pytest` (`backend/tests/test_*.py`) | quick | Sign-up, login, logout, cookie tampering, health — against in-memory SQLite |
+| `pytest` (`backend/tests/test_*.py`) | quick | Sign-up, login, logout, cookie tampering, health; sky positions against Skyfield/DE421 reference values — against in-memory SQLite |
 | `tsc` | quick | Frontend type-check |
-| `vitest` (`frontend/src/*.test.tsx`) | quick | Login redirect and login/logout flow with a mocked backend |
+| `vitest` (`frontend/src/*.test.tsx`) | quick | Login redirect, login/logout flow and the sky page, with a mocked backend |
 | `vite build` | full | The production bundle builds |
 | `backend/tests/smoke.py` | full | Real stack end to end: frontend proxy → API → Postgres (signup, me, logout, login) |
 
