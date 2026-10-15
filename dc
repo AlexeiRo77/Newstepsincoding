@@ -17,7 +17,19 @@ cd "$ROOT"
 # The variables that identify WHICH stack this checkout runs come from this checkout's .env (or the
 # defaults) — never from a value exported in the shell, which may belong to another checkout.
 IDENTITY_VARS=(COMPOSE_PROJECT_NAME DB_PORT API_PORT FRONTEND_PORT FRONTEND_URL)
-env_file_value() { [ -f .env ] && sed -n "s/^$1=//p" .env | tail -n1; }
+# The last `VAR=value` line in .env, read as compose reads it: an `export ` prefix, CRs, surrounding
+# quotes and an unquoted trailing ` # comment` are not part of the value.
+env_file_value() {
+  [ -f .env ] || return 0
+  local line
+  line="$(tr -d '\r' <.env | sed -n -E "s/^[[:space:]]*(export[[:space:]]+)?$1[[:space:]]*=[[:space:]]*//p" | tail -n1)"
+  case "$line" in
+    \"*) line="${line#\"}"; line="${line%%\"*}" ;;
+    \'*) line="${line#\'}"; line="${line%%\'*}" ;;
+    *) line="${line%%[[:space:]]#*}"; line="${line%"${line##*[![:space:]]}"}" ;;
+  esac
+  printf '%s' "$line"
+}
 for var in "${IDENTITY_VARS[@]}"; do
   from_file="$(env_file_value "$var" || true)"
   if [ -n "${!var:-}" ] && [ "${!var}" != "$from_file" ]; then
@@ -30,26 +42,29 @@ export FRONTEND_URL="${FRONTEND_URL:-http://localhost:${FRONTEND_PORT:-5173}}"
 
 dco() { docker compose "$@"; }
 
+# Each step is chained with && (or returns on failure): `set -e` does not apply inside a function
+# called from `cmd || rc=$?`, so a bare sequence would hide every failure but the last.
 check_quick() {
-  dco build backend frontend
-  echo "== backend: ruff, pytest"
-  dco run --rm --no-deps -T backend sh -c \
-    "ruff check --no-cache . && ruff format --check --no-cache . && pytest -q -p no:cacheprovider"
-  echo "== frontend: typecheck, vitest"
-  dco run --rm --no-deps -T frontend sh -c "npm run typecheck && npm test"
+  dco build backend frontend &&
+    echo "== backend: ruff, pytest" &&
+    dco run --rm --no-deps -T backend sh -c \
+      "ruff check --no-cache . && ruff format --check --no-cache . && pytest -q -p no:cacheprovider" &&
+    echo "== frontend: typecheck, vitest" &&
+    dco run --rm --no-deps -T frontend sh -c "npm run typecheck && npm test"
 }
 
 check_full() {
-  check_quick
+  check_quick || return $?
   echo "== frontend: production build"
-  dco run --rm --no-deps -T frontend npm run build
+  dco run --rm --no-deps -T frontend npm run build || return $?
   echo "== stack: end-to-end smoke"
-  local was_up=""
-  [ -n "$(dco ps -q --status running backend 2>/dev/null)" ] && was_up=1
-  dco up -d --wait
-  local rc=0
-  dco exec -T backend python tests/smoke.py http://frontend:5173 || rc=$?
-  [ -n "$was_up" ] || dco down
+  # Leave the stack as we found it: stop it afterwards only if nothing of it was running before.
+  local was_up rc=0
+  was_up="$(dco ps -q --status running 2>/dev/null || true)"
+  [ -n "$was_up" ] && echo "(the running stack is updated to the code being checked)"
+  dco up -d --wait || rc=$?
+  [ "$rc" -ne 0 ] || dco exec -T backend python tests/smoke.py http://frontend:5173 || rc=$?
+  [ -n "$was_up" ] || dco down || true
   return "$rc"
 }
 
@@ -70,7 +85,7 @@ case "$cmd" in
   up) dco up -d --build --wait "$@" && echo "App: $FRONTEND_URL" ;;
   down) dco down "$@" ;;  # never -v: the database volume survives
   reset)
-    read -r -p "Delete this stack's database? Type 'yes': " answer
+    read -r -p "Delete this stack's database? Type 'yes': " answer || answer=""
     if [ "$answer" = "yes" ]; then dco down -v; else echo "Cancelled."; fi
     ;;
   ps | logs | build) dco "$cmd" "$@" ;;

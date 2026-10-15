@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$CLAUDE_PROJECT_DIR\" && command -v docker >/dev/null || exit 0; ./dc check quick >/dev/null 2>&1 || { echo 'Quick gate failed: run ./dc check quick and fix it before finishing.' >&2; exit 2; }"
+            "command": "grep -q '\"stop_hook_active\": *true' && exit 0; cd \"$CLAUDE_PROJECT_DIR\" && docker info >/dev/null 2>&1 || exit 0; ./dc check quick >/tmp/newstepsincoding-quick-gate.log 2>&1 || { echo 'Quick gate failed (log: /tmp/newstepsincoding-quick-gate.log). Run ./dc check quick and fix it before finishing.' >&2; exit 2; }"
           }
         ]
       }
