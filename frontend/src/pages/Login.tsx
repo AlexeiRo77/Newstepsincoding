@@ -3,9 +3,10 @@ import { useAuth } from '../auth'
 import AuthForm from '../components/AuthForm'
 
 export default function Login() {
-  const { user, login } = useAuth()
+  const { user, loading, login } = useAuth()
   const navigate = useNavigate()
   const from = (useLocation().state as { from?: string } | null)?.from ?? '/'
+  if (loading) return null
   if (user) return <Navigate to={from} replace />
   return (
     <AuthForm

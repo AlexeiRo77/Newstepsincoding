@@ -8,7 +8,7 @@ with sign-up, login and logout already working and two placeholder pages (Home, 
 You need only [Docker](https://docs.docker.com/get-docker/).
 
 ```bash
-./dc up            # build and start everything, then open http://localhost:5173
+./dc up            # build and start everything, then open the URL it prints (default http://localhost:5173)
 ./dc down          # stop it (your data is kept)
 ./dc check quick   # lint, type-check and unit tests
 ./dc check full    # everything, including an end-to-end test on the running app

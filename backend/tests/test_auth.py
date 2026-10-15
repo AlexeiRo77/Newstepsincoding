@@ -62,3 +62,24 @@ def test_read_session_round_trip_and_garbage():
     assert read_session(create_session_token(uid, 3)) == (uid, 3)
     assert read_session("garbage") is None
     assert read_session(None) is None
+
+
+def test_dev_secret_refused_outside_local(monkeypatch):
+    import pytest
+
+    from app.auth import resolve_session_secret
+
+    monkeypatch.delenv("SESSION_SECRET", raising=False)
+    monkeypatch.setenv("APP_ENV", "production")
+    with pytest.raises(RuntimeError):
+        resolve_session_secret()
+    monkeypatch.setenv("APP_ENV", "local")
+    monkeypatch.setenv("FRONTEND_URL", "https://app.example.com")
+    with pytest.raises(RuntimeError):
+        resolve_session_secret()
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("SESSION_SECRET", "short")
+    with pytest.raises(RuntimeError):
+        resolve_session_secret()
+    monkeypatch.setenv("SESSION_SECRET", "x" * 32)
+    assert resolve_session_secret() == "x" * 32

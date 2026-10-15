@@ -3,8 +3,9 @@ import { useAuth } from '../auth'
 import AuthForm from '../components/AuthForm'
 
 export default function Signup() {
-  const { user, signup } = useAuth()
+  const { user, loading, signup } = useAuth()
   const navigate = useNavigate()
+  if (loading) return null
   if (user) return <Navigate to="/" replace />
   return (
     <AuthForm

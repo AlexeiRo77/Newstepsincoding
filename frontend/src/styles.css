@@ -60,3 +60,7 @@ button:disabled { opacity: 0.6; cursor: default; }
 .topbar nav a.active { font-weight: 600; text-decoration: underline; }
 
 .page { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; }
+dt { color: var(--muted); }
+dd { margin: 0; overflow-wrap: anywhere; }

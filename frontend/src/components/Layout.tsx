@@ -7,8 +7,11 @@ export default function Layout() {
   const navigate = useNavigate()
 
   async function onLogout() {
-    await logout()
-    navigate('/login', { replace: true })
+    try {
+      await logout()
+    } finally {
+      navigate('/login', { replace: true })
+    }
   }
 
   return (

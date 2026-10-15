@@ -57,7 +57,7 @@ Not covered yet: browser-level end-to-end tests (e.g. Playwright) and any migrat
 ## Login and sessions
 
 - A session is an **HttpOnly, SameSite=Lax cookie** holding a signed, timestamped `{user_id, epoch}`
-  (itsdangerous, 7-day expiry). It is `Secure` when `FRONTEND_URL` starts with `https://`.
+  (itsdangerous, 7-day expiry). It is `Secure` unless `APP_ENV=local` with a plain-http `FRONTEND_URL`.
 - **Logout ends the session everywhere** by incrementing `users.session_epoch`; every cookie carrying an
   older epoch is refused by `current_user`.
 - Passwords are **bcrypt**-hashed (input truncated to bcrypt's 72-byte limit). Rule: 8–128 characters,
@@ -66,12 +66,16 @@ Not covered yet: browser-level end-to-end tests (e.g. Playwright) and any migrat
   hash), so it does not reveal which emails have accounts. Sign-up necessarily does reveal a taken email
   (409).
 - Emails are stored lower-cased; the unique index therefore behaves case-insensitively.
-- The backend **refuses to start** outside `APP_ENV=local` unless `SESSION_SECRET` is set to a real value.
+- The backend **refuses to start** with the built-in dev signing key unless `APP_ENV=local` and
+  `FRONTEND_URL` is a localhost URL; outside local, `SESSION_SECRET` must be at least 32 characters. The
+  API docs (`/docs`) are served only when `APP_ENV=local`.
 - Protect a new API route with `user: User = Depends(current_user)`; protect a new page by placing its
   `<Route>` inside the `RequireAuth` element in `App.tsx`.
 
 Deliberately left out of this basic version (present in jaah): rate limiting / lockout, password reset,
-email verification, MFA and OAuth sign-in.
+email verification, MFA and OAuth sign-in. CSRF protection rests on SameSite=Lax plus JSON-only bodies; an
+Origin check would also cover a hostile sibling subdomain. The local stack (compose file, dev Dockerfiles)
+is not a production deployment.
 
 ## Conventions
 

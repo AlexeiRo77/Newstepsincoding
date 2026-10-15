@@ -38,6 +38,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     try {
       await post('/api/auth/logout')
+    } catch {
+      // Signed out locally either way; the cookie expires on its own if the server was unreachable.
     } finally {
       setUser(null)
     }

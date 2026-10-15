@@ -13,6 +13,7 @@ import secrets
 import uuid
 from functools import lru_cache
 from typing import NamedTuple
+from urllib.parse import urlparse
 
 import bcrypt
 from fastapi import Depends, HTTPException, Request
@@ -32,16 +33,30 @@ PASSWORD_MAX = 128
 _DEV_SESSION_SECRET = "dev-session-secret-change-me"
 
 
+SESSION_SECRET_MIN = 32
+_LOCAL_HOSTS = {"", "localhost", "127.0.0.1", "frontend"}
+
+
+def _served_locally() -> bool:
+    """Whether FRONTEND_URL (if set) points at this machine — a second tripwire beside APP_ENV."""
+    return (urlparse(frontend_url()).hostname or "") in _LOCAL_HOSTS
+
+
 def resolve_session_secret() -> str:
-    """The cookie-signing secret. The published dev value (or none) is accepted only when APP_ENV=local:
-    a signing key that is in git lets anyone forge a session for any user."""
+    """The cookie-signing secret. The published dev value (or none) is accepted only when APP_ENV=local
+    AND the app is served from localhost: a signing key that is in git lets anyone forge a session."""
     secret = os.environ.get("SESSION_SECRET", "")
     if secret and not hmac.compare_digest(secret.encode(), _DEV_SESSION_SECRET.encode()):
+        if len(secret) < SESSION_SECRET_MIN and not is_local_env():
+            raise RuntimeError(
+                f"SESSION_SECRET must be at least {SESSION_SECRET_MIN} characters. "
+                "Generate one with: openssl rand -hex 32"
+            )
         return secret
-    if not is_local_env():
+    if not is_local_env() or not _served_locally():
         raise RuntimeError(
-            "SESSION_SECRET must be set to a real value when APP_ENV is not 'local'. "
-            "Generate one with: openssl rand -hex 32"
+            "SESSION_SECRET must be set to a real value unless APP_ENV is 'local' and FRONTEND_URL is a "
+            "localhost URL. Generate one with: openssl rand -hex 32"
         )
     return _DEV_SESSION_SECRET
 
@@ -79,14 +94,14 @@ def read_session(token: str | None) -> SessionClaims | None:
 
 
 def set_session_cookie(response, user: User) -> None:
-    """`samesite=lax` + HttpOnly; `Secure` whenever the app is served over https (from FRONTEND_URL)."""
+    """`samesite=lax` + HttpOnly; `Secure` everywhere except plain-http local development."""
     response.set_cookie(
         COOKIE_NAME,
         create_session_token(user.id, user.session_epoch),
         max_age=SESSION_MAX_AGE,
         httponly=True,
         samesite="lax",
-        secure=frontend_url().startswith("https://"),
+        secure=not is_local_env() or frontend_url().startswith("https://"),
         path="/",
     )
 
