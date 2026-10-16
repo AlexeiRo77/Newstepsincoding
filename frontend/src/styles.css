@@ -89,3 +89,22 @@ dd { margin: 0; overflow-wrap: anywhere; }
 .positions th:first-child, .positions td:first-child { text-align: left; }
 .positions th { color: var(--muted); font-weight: 600; }
 .positions tr.below td { color: var(--muted); }
+
+.waves h1 { margin-bottom: 4px; }
+.wave { margin: 24px 0 0; padding: 16px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
+.wave h2 { margin: 0 0 4px; font-size: 1.15rem; }
+.wave figcaption p { margin: 0 0 8px; }
+.wave-plot { display: block; width: 100%; height: auto; }
+.wave-axis { stroke: var(--border); stroke-width: 1; }
+.wave-line { fill: none; stroke-width: 2.5; stroke-linejoin: round; }
+.wave-envelope path { fill: none; stroke: #90a4ae; stroke-width: 1.5; stroke-dasharray: 6 5; }
+.wave-air circle { fill: #a5d6a7; }
+.wave-bracket path { fill: none; stroke: var(--muted); stroke-width: 1.5; }
+.wave-bracket text { font: 600 13px system-ui, sans-serif; fill: var(--muted); }
+@media (max-width: 480px) {
+  .wave-bracket text { font-size: 28px; }
+  .wave-line { stroke-width: 4; }
+  .wave { padding: 12px; }
+}
+.wave-facts { display: block; margin: 8px 0 0; font-size: 0.9rem; }
+.wave-facts div { display: grid; grid-template-columns: 6.5em 1fr; gap: 8px; padding: 2px 0; }
