@@ -14,13 +14,15 @@ detail lives in the docs routed below. What the project is and how to run it: [R
 - **Schema changes** need an Alembic revision in `backend/migrations/versions/` alongside the model change.
 - **Auth is security-sensitive:** changes to `backend/app/auth.py` or `backend/app/routes/auth.py` keep
   the invariants listed in [docs/codebase.md](docs/codebase.md#login-and-sessions).
-- **Secrets** never go in git: `.env` is ignored; `SESSION_SECRET` is required outside `APP_ENV=local`.
+- **Secrets** never go in git: `.env` and everything in `Directory/Secrets/` except its templates are
+  ignored; `SESSION_SECRET` is required outside `APP_ENV=local`.
 
 ## Router
 
 | Topic | Read |
 |---|---|
 | Layout, how it runs, tests, conventions, landmines, login/session design | [docs/codebase.md](docs/codebase.md) |
+| Local secrets folder (AWS deploy key template; contents git-ignored) | [Directory/Secrets/README.md](Directory/Secrets/README.md) |
 | Running the app, ports, settings | [README.md](README.md), [.env.example](.env.example) |
 | Stack and gate commands | [dc](dc) |
 | How agent context files are shaped here | `/usr/lib/skynetd/docs/policies/context-architecture.md` |
