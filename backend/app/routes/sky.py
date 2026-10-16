@@ -25,7 +25,7 @@ LONGITUDE = 76.8897
 MOMENT = datetime(1977, 2, 3, 21, 35, tzinfo=timezone(timedelta(hours=6)))
 MATRIX_SIZE = 32
 # Yale Bright Star Catalogue, 5th ed. (CDS V/50), J2000 positions, trimmed to the designated stars of
-# magnitude 2.5 or brighter; names are IAU proper names.
+# magnitude 2.5 or brighter; names are IAU proper names where the star has one.
 CATALOGUE = Path(__file__).resolve().parent.parent / "sky" / "bright_stars.csv"
 
 

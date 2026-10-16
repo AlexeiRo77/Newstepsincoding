@@ -64,10 +64,9 @@ const hms = (deg: number) => {
 const starLabel = (s: { name: string; designation: string }) => s.name || s.designation
 
 // LED value (1 = faintest catalogued star … 255 = the Sun, linear in magnitude) → glow strength 0.3–1.
-// The brightest star, Sirius, is value ~66: stretching the star range to the full scale makes their
+// Stars span only the bottom of that scale, so it is stretched to the brightest star LED to make their
 // differences visible; the Moon and the Sun saturate and stand out by colour and halo instead.
-const SIRIUS_VALUE = 66
-const glow = (value: number) => 0.3 + 0.7 * Math.min(1, (value - 1) / (SIRIUS_VALUE - 1))
+const glow = (value: number, starMax: number) => 0.3 + 0.7 * Math.min(1, (value - 1) / Math.max(1, starMax - 1))
 
 function LightMatrix({ matrix, onPoint }: { matrix: SkyData['light_matrix']; onPoint: (text: string | null) => void }) {
   const { size, leds, lit } = matrix
@@ -81,6 +80,7 @@ function LightMatrix({ matrix, onPoint }: { matrix: SkyData['light_matrix']; onP
     byCell.set(key, [...(byCell.get(key) ?? []), l])
   }
   const at = (n: number) => MARGIN + (n + 0.5) * CELL
+  const starMax = Math.max(1, ...lit.filter((l) => l.kind === 'star').map((l) => leds[l.row][l.col]))
   const labelled = lit.filter((l) => l.kind !== 'star' || l.vmag <= LABEL_MAG)
 
   return (
@@ -100,7 +100,7 @@ function LightMatrix({ matrix, onPoint }: { matrix: SkyData['light_matrix']; onP
           const here = byCell.get(`${col},${row}`)
           if (!value || !here) return <circle key={`${col},${row}`} cx={x} cy={y} r={CELL * 0.3} fill="#161c2b" />
           const [r, g, b] = COLORS[here[0].kind]
-          const k = glow(value)
+          const k = glow(value, starMax)
           const color = `rgba(${r},${g},${b},${k})`
           const text = here.map((l) => `${l.name} (mag ${fmt(l.vmag)})`).join(', ')
           return (
@@ -163,7 +163,7 @@ export default function Sky() {
   const { observer, sun, moon, stars, light_matrix: matrix } = data
   const local = observer.local_time.replace('T', ' ').slice(0, 16)
   const utc = observer.utc_time.replace('T', ' ').slice(0, 16)
-  const lit = stars.filter((s) => s.alt > 0).length
+  const lit = stars.filter((s) => s.alt >= 0).length
 
   return (
     <div className="sky">
