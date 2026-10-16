@@ -6,6 +6,7 @@ import Login from './pages/Login'
 import Profile from './pages/Profile'
 import Signup from './pages/Signup'
 import Sky from './pages/Sky'
+import Waves from './pages/Waves'
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/sky" element={<Sky />} />
+          <Route path="/waves" element={<Waves />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
