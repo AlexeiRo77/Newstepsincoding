@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, type MouseEvent } from 'react'
+import { useEffect, useState } from 'react'
 import { get } from '../api'
 
-// The sky over Almaty at 21:35 on 3 February 1977: positions from GET /api/sky and the light map it
-// computes (whole sphere, azimuth across, altitude down; see backend/app/sky/lightmap.py).
+// The sky over Almaty at 21:35 on 3 February 1977: positions from GET /api/sky and the light matrix it
+// computes (the visible dome as an LED grid, zenith in the centre; see backend/app/sky/lightmap.py).
 
 interface Body {
   alt: number
@@ -25,6 +25,14 @@ interface Star {
   vmag: number
 }
 
+interface Light {
+  name: string
+  kind: 'sun' | 'moon' | 'star'
+  col: number
+  row: number
+  vmag: number
+}
+
 export interface SkyData {
   observer: {
     place: string
@@ -37,12 +45,13 @@ export interface SkyData {
   sun: Body
   moon: Body
   stars: Star[]
-  light_map: { width: number; height: number; naked_eye_limit: number; pixels: string }
+  light_matrix: { size: number; magnitude_limit: number; leds: number[][]; lit: Light[] }
 }
 
-const SCALE_X = 2 // the map spans 360° across but 180° down: draw columns twice as wide
-const STARS_SHOWN = 40
-const CARDINALS: [string, number][] = [['N', 0], ['E', 90], ['S', 180], ['W', 270], ['N', 360]]
+const CELL = 20 // drawing units per LED
+const MARGIN = 26 // room for the compass letters
+const LABEL_MAG = 1 // stars at least this bright are named on the matrix
+const COLORS = { sun: [255, 196, 70], moon: [255, 246, 220], star: [200, 220, 255] } as const
 
 const fmt = (n: number, digits = 2) => n.toFixed(digits)
 const hms = (deg: number) => {
@@ -51,132 +60,110 @@ const hms = (deg: number) => {
   return `${Math.floor(total / 3600)}h ${pad(Math.floor(total / 60) % 60)}m ${pad(total % 60)}s`
 }
 
-// A star's best label: proper name, else catalogue designation, else its BSC number.
-const starLabel = (s: { name: string; designation?: string; hr?: number }) =>
-  s.name || s.designation || `HR ${s.hr}`
+// A star's best label: proper name, else catalogue designation.
+const starLabel = (s: { name: string; designation: string }) => s.name || s.designation
 
-// Pixel value → display brightness. Values are linear in magnitude (1 = faintest naked-eye star,
-// 255 = the Sun); a square root lifts the faint stars so they stay visible on screen.
-function shade(value: number): number {
-  return value === 0 ? 0 : Math.round(70 + 185 * Math.sqrt((value - 1) / 254))
-}
+// LED value (1 = faintest catalogued star … 255 = the Sun, linear in magnitude) → glow strength 0.3–1.
+// The brightest star, Sirius, is value ~66: stretching the star range to the full scale makes their
+// differences visible; the Moon and the Sun saturate and stand out by colour and halo instead.
+const SIRIUS_VALUE = 66
+const glow = (value: number) => 0.3 + 0.7 * Math.min(1, (value - 1) / (SIRIUS_VALUE - 1))
 
-function drawMap(canvas: HTMLCanvasElement, data: SkyData) {
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return
-  const { width, height, pixels } = data.light_map
-  const W = width * SCALE_X
-  const H = height
-  ctx.fillStyle = '#05070f'
-  ctx.fillRect(0, 0, W, H / 2)
-  ctx.fillStyle = '#120d06'
-  ctx.fillRect(0, H / 2, W, H / 2)
-
-  const bytes = Uint8Array.from(atob(pixels), (c) => c.charCodeAt(0))
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const v = bytes[y * width + x]
-      if (!v) continue
-      const s = shade(v)
-      ctx.fillStyle = `rgb(${s},${s},${Math.min(255, s + 20)})`
-      ctx.fillRect(x * SCALE_X, y, SCALE_X, 1)
-    }
+function LightMatrix({ matrix, onPoint }: { matrix: SkyData['light_matrix']; onPoint: (text: string | null) => void }) {
+  const { size, leds, lit } = matrix
+  const span = size * CELL
+  const full = span + 2 * MARGIN
+  const centre = MARGIN + span / 2
+  // Occupants per LED; the brightest one (first in `lit`) sets the colour.
+  const byCell = new Map<string, Light[]>()
+  for (const l of lit) {
+    const key = `${l.col},${l.row}`
+    byCell.set(key, [...(byCell.get(key) ?? []), l])
   }
+  const at = (n: number) => MARGIN + (n + 0.5) * CELL
+  const labelled = lit.filter((l) => l.kind !== 'star' || l.vmag <= LABEL_MAG)
 
-  const xOf = (az: number) => (az / 360) * W
-  const yOf = (alt: number) => ((90 - alt) / 180) * H
-  ctx.strokeStyle = 'rgba(120,140,200,0.18)'
-  ctx.lineWidth = 1
-  for (let alt = -60; alt <= 60; alt += 30) {
-    ctx.beginPath()
-    ctx.moveTo(0, yOf(alt) + 0.5)
-    ctx.lineTo(W, yOf(alt) + 0.5)
-    ctx.stroke()
-  }
-  for (let az = 45; az < 360; az += 45) {
-    ctx.beginPath()
-    ctx.moveTo(xOf(az) + 0.5, 0)
-    ctx.lineTo(xOf(az) + 0.5, H)
-    ctx.stroke()
-  }
-  ctx.strokeStyle = 'rgba(255,170,90,0.75)'
-  ctx.beginPath()
-  ctx.moveTo(0, H / 2 + 0.5)
-  ctx.lineTo(W, H / 2 + 0.5)
-  ctx.stroke()
-
-  ctx.font = '13px system-ui, sans-serif'
-  ctx.fillStyle = 'rgba(255,190,120,0.9)'
-  ctx.textBaseline = 'bottom'
-  for (const [label, az] of CARDINALS) {
-    ctx.textAlign = az === 0 ? 'left' : az === 360 ? 'right' : 'center'
-    ctx.fillText(label, xOf(az) + (az === 0 ? 4 : az === 360 ? -4 : 0), H / 2 - 3)
-  }
-  ctx.textAlign = 'left'
-  ctx.fillStyle = 'rgba(160,175,220,0.8)'
-  ctx.font = '11px system-ui, sans-serif'
-  for (let alt = -60; alt <= 60; alt += 30) if (alt) ctx.fillText(`${alt > 0 ? '+' : ''}${alt}°`, 4, yOf(alt) - 2)
-
-  // Ring and label the Sun, the Moon and the brightest named stars; the light itself is in the matrix.
-  const mark = (label: string, b: { alt: number; az: number }, color: string, radius: number) => {
-    const x = xOf(b.az)
-    const y = yOf(b.alt)
-    ctx.strokeStyle = color
-    ctx.beginPath()
-    ctx.arc(x, y, radius, 0, 2 * Math.PI)
-    ctx.stroke()
-    ctx.fillStyle = color
-    ctx.textAlign = x > W - 80 ? 'right' : 'left'
-    ctx.fillText(label, x + (x > W - 80 ? -radius - 3 : radius + 3), y + 4)
-  }
-  ctx.font = '11px system-ui, sans-serif'
-  for (const s of data.stars.filter((s) => s.name && s.vmag < 1.6)) mark(s.name, s, 'rgba(170,200,255,0.75)', 5)
-  ctx.font = 'bold 13px system-ui, sans-serif'
-  mark('Moon', data.moon, '#e8e3c8', 9)
-  mark('Sun', data.sun, '#ffb347', 9)
+  return (
+    <svg className="matrix" viewBox={`0 0 ${full} ${full}`} role="img" aria-label="Light matrix of the visible sky">
+      <defs>
+        <filter id="led-glow" x="-100%" y="-100%" width="300%" height="300%">
+          <feGaussianBlur stdDeviation="3" />
+        </filter>
+      </defs>
+      <rect width={full} height={full} rx="14" fill="#04060c" />
+      <circle cx={centre} cy={centre} r={span / 2} fill="#070b16" stroke="rgba(255,170,90,0.55)" />
+      {leds.map((line, row) =>
+        line.map((value, col) => {
+          if (value < 0) return null
+          const x = at(col)
+          const y = at(row)
+          const here = byCell.get(`${col},${row}`)
+          if (!value || !here) return <circle key={`${col},${row}`} cx={x} cy={y} r={CELL * 0.3} fill="#161c2b" />
+          const [r, g, b] = COLORS[here[0].kind]
+          const k = glow(value)
+          const color = `rgba(${r},${g},${b},${k})`
+          const text = here.map((l) => `${l.name} (mag ${fmt(l.vmag)})`).join(', ')
+          return (
+            <g key={`${col},${row}`} className="led-on" onMouseEnter={() => onPoint(text)} onMouseLeave={() => onPoint(null)}>
+              <title>{text}</title>
+              <circle
+                cx={x}
+                cy={y}
+                r={CELL * (here[0].kind === 'star' ? 0.3 + 0.4 * k : 0.95)}
+                fill={color}
+                filter="url(#led-glow)"
+              />
+              <circle cx={x} cy={y} r={CELL * (0.24 + 0.12 * k)} fill={color} />
+            </g>
+          )
+        }),
+      )}
+      {labelled.map((l) => {
+        const left = l.col > size * 0.7
+        return (
+          <text
+            key={l.name}
+            className={`matrix-label ${l.kind}`}
+            x={at(l.col) + (left ? -CELL * 0.6 : CELL * 0.6)}
+            y={at(l.row) + 4}
+            textAnchor={left ? 'end' : 'start'}
+          >
+            {l.name}
+          </text>
+        )
+      })}
+      {(
+        [
+          ['N', centre, MARGIN / 2],
+          ['E', MARGIN / 2, centre],
+          ['S', centre, full - MARGIN / 2],
+          ['W', full - MARGIN / 2, centre],
+        ] as const
+      ).map(([label, x, y]) => (
+        <text key={label} className="matrix-compass" x={x} y={y + 5} textAnchor="middle">
+          {label}
+        </text>
+      ))}
+    </svg>
+  )
 }
 
 export default function Sky() {
   const [data, setData] = useState<SkyData | null>(null)
   const [error, setError] = useState(false)
-  const [showAll, setShowAll] = useState(false)
-  const [cursor, setCursor] = useState<string | null>(null)
-  const canvas = useRef<HTMLCanvasElement>(null)
+  const [pointed, setPointed] = useState<string | null>(null)
 
   useEffect(() => {
     get<SkyData>('/api/sky').then(setData, () => setError(true))
   }, [])
 
-  useEffect(() => {
-    if (data && canvas.current) drawMap(canvas.current, data)
-  }, [data])
-
   if (error) return <p className="error">Could not load the sky. Try reloading the page.</p>
   if (!data) return <p className="muted">Computing the sky…</p>
 
-  const { observer, sun, moon, stars, light_map: map } = data
+  const { observer, sun, moon, stars, light_matrix: matrix } = data
   const local = observer.local_time.replace('T', ' ').slice(0, 16)
   const utc = observer.utc_time.replace('T', ' ').slice(0, 16)
-  const listed = showAll ? stars : stars.slice(0, STARS_SHOWN)
   const lit = stars.filter((s) => s.alt > 0).length
-
-  function onMove(e: MouseEvent<HTMLCanvasElement>) {
-    const r = e.currentTarget.getBoundingClientRect()
-    const az = ((e.clientX - r.left) / r.width) * 360
-    const alt = 90 - ((e.clientY - r.top) / r.height) * 180
-    let near: { name: string; vmag: number } | null = null
-    let best = 1.5 // degrees
-    for (const o of [{ ...sun, name: 'Sun' }, { ...moon, name: 'Moon' }, ...stars]) {
-      const dAz = (((o.az - az + 540) % 360) - 180) * Math.cos((alt * Math.PI) / 180)
-      const d = Math.hypot(o.alt - alt, dAz)
-      if (d < best) {
-        best = d
-        near = { name: starLabel(o), vmag: o.vmag }
-      }
-    }
-    const label = near ? ` — ${near.name} (mag ${fmt(near.vmag)})` : ''
-    setCursor(`alt ${fmt(alt, 1)}°, az ${fmt(az, 1)}°${label}`)
-  }
 
   return (
     <div className="sky">
@@ -186,23 +173,15 @@ export default function Sky() {
         sidereal time {hms(observer.local_sidereal_time_deg)}
       </p>
 
-      <h2>Light map</h2>
+      <h2>Light matrix</h2>
       <p className="muted">
-        The whole sky as a {map.width} × {map.height} pixel matrix. Across: azimuth N → E → S → W → N. Down:
-        altitude from the zenith (+90°) to the nadir (−90°); the orange line is the horizon. Each lit pixel holds
-        the light of the Sun, the Moon or the naked-eye stars (to magnitude {map.naked_eye_limit}) in it,
-        including what is below the horizon.
+        The visible sky as a {matrix.size} × {matrix.size} grid of LEDs, as on a star chart held overhead: the zenith
+        in the centre, the horizon (orange circle) at the edge, north up and east on the left. Each lit LED shows the
+        Moon or the stars of magnitude {matrix.magnitude_limit} or brighter that fall in it; the brighter, the stronger
+        it glows.
       </p>
-      <canvas
-        ref={canvas}
-        className="lightmap"
-        width={map.width * SCALE_X}
-        height={map.height}
-        aria-label="Light map of the whole sky"
-        onMouseMove={onMove}
-        onMouseLeave={() => setCursor(null)}
-      />
-      <p className="muted lightmap-readout">{cursor ?? 'Point at the map to read altitude and azimuth.'}</p>
+      <LightMatrix matrix={matrix} onPoint={setPointed} />
+      <p className="muted matrix-readout">{pointed ?? 'Point at a lit LED to see what lights it.'}</p>
 
       <h2>Sun and Moon</h2>
       <table className="positions">
@@ -243,7 +222,7 @@ export default function Sky() {
 
       <h2>Stars</h2>
       <p className="muted">
-        {stars.length.toLocaleString('en')} naked-eye stars (Yale Bright Star Catalogue), {lit.toLocaleString('en')}{' '}
+        The {stars.length} stars of magnitude {matrix.magnitude_limit} or brighter (Yale Bright Star Catalogue), {lit}{' '}
         above the horizon. Brightest first.
       </p>
       <div className="table-scroll">
@@ -259,7 +238,7 @@ export default function Sky() {
             </tr>
           </thead>
           <tbody>
-            {listed.map((s) => (
+            {stars.map((s) => (
               <tr key={s.hr} className={s.alt < 0 ? 'below' : undefined}>
                 <td>
                   {starLabel(s)}
@@ -275,9 +254,6 @@ export default function Sky() {
           </tbody>
         </table>
       </div>
-      {!showAll && (
-        <button onClick={() => setShowAll(true)}>Show all {stars.length.toLocaleString('en')} stars</button>
-      )}
       <p className="muted small">
         Grey rows are below the horizon. Altitudes are geometric (no atmospheric refraction). The Moon&apos;s altitude is as
         seen from the ground; its RA and Dec are geocentric.

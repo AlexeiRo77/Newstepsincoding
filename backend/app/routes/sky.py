@@ -1,9 +1,8 @@
-"""`GET /api/sky`: the Sun, the Moon and every naked-eye star over Almaty at 21:35 on 3 February 1977,
-plus the whole-sky light map."""
+"""`GET /api/sky`: the Sun, the Moon and the bright stars over Almaty at 21:35 on 3 February 1977, plus the
+light matrix of the visible sky."""
 
 from __future__ import annotations
 
-import base64
 import csv
 import re
 from datetime import UTC, datetime, timedelta, timezone
@@ -15,7 +14,7 @@ from fastapi import APIRouter, Depends
 from app.auth import current_user
 from app.models import User
 from app.sky import astro
-from app.sky.lightmap import NAKED_EYE_LIMIT, render
+from app.sky.lightmap import BRIGHT_LIMIT, cell_of, render
 
 router = APIRouter(prefix="/api/sky", tags=["sky"])
 
@@ -24,8 +23,9 @@ LATITUDE = 43.2389
 LONGITUDE = 76.8897
 # Alma-Ata kept UTC+6 all year in 1977 (tz database Asia/Almaty; summer time began in 1981).
 MOMENT = datetime(1977, 2, 3, 21, 35, tzinfo=timezone(timedelta(hours=6)))
-MAP_SIZE = 512
-# Yale Bright Star Catalogue, 5th ed. (CDS V/50), J2000 positions, trimmed; names are IAU proper names.
+MATRIX_SIZE = 32
+# Yale Bright Star Catalogue, 5th ed. (CDS V/50), J2000 positions, trimmed to the designated stars of
+# magnitude 2.5 or brighter; names are IAU proper names.
 CATALOGUE = Path(__file__).resolve().parent.parent / "sky" / "bright_stars.csv"
 
 
@@ -56,8 +56,6 @@ def sky() -> dict:
     with CATALOGUE.open(newline="") as f:
         for row in csv.DictReader(f):
             vmag = float(row["vmag"])
-            if vmag > NAKED_EYE_LIMIT:
-                continue
             alt, az, ra, dec = astro.star(
                 obs,
                 float(row["ra_deg"]),
@@ -78,9 +76,15 @@ def sky() -> dict:
                 }
             )
     stars.sort(key=lambda s: s["vmag"])
-    lights = [(sun.alt, sun.az, sun.vmag), (moon.alt, moon.az, moon.vmag)]
-    lights += [(s["alt"], s["az"], s["vmag"]) for s in stars]
-    pixels = render(lights, MAP_SIZE, MAP_SIZE)
+    bodies = [("Sun", "sun", sun.alt, sun.az, sun.vmag), ("Moon", "moon", moon.alt, moon.az, moon.vmag)]
+    bodies += [(s["name"] or s["designation"], "star", s["alt"], s["az"], s["vmag"]) for s in stars]
+    leds = render(((alt, az, vmag) for _, _, alt, az, vmag in bodies), MATRIX_SIZE)
+    # What lights each LED, brightest first (stars are sorted already; the Sun and Moon come first).
+    lit = []
+    for name, kind, alt, az, vmag in bodies:
+        cell = cell_of(alt, az, MATRIX_SIZE)
+        if cell:
+            lit.append({"name": name, "kind": kind, "col": cell[0], "row": cell[1], "vmag": round(vmag, 2)})
     return {
         "observer": {
             "place": PLACE,
@@ -93,11 +97,11 @@ def sky() -> dict:
         "sun": _body(sun),
         "moon": _body(moon),
         "stars": stars,
-        "light_map": {
-            "width": MAP_SIZE,
-            "height": MAP_SIZE,
-            "naked_eye_limit": NAKED_EYE_LIMIT,
-            "pixels": base64.b64encode(pixels).decode("ascii"),
+        "light_matrix": {
+            "size": MATRIX_SIZE,
+            "magnitude_limit": BRIGHT_LIMIT,
+            "leds": leds,
+            "lit": lit,
         },
     }
 

@@ -1,16 +1,15 @@
 """Sky positions for Almaty, 1977-02-03 21:35 (UTC+6). Expected values were computed independently with
 Skyfield 1.x and the JPL DE421 ephemeris (geometric altitude, no refraction)."""
 
-import base64
 import math
 
 import pytest
 
-from app.routes.sky import MAP_SIZE, sky
-from app.sky.lightmap import magnitude_to_value, pixel_of, render
+from app.routes.sky import MATRIX_SIZE, sky
+from app.sky.lightmap import NO_LED, cell_of, in_dome, magnitude_to_value, render
 
 CREDS = {"email": "sky@example.com", "password": "correct horse"}
-TOLERANCE_DEG = 0.05  # a light-map pixel is ~0.35°–0.7°
+TOLERANCE_DEG = 0.05  # a light-matrix cell is ~6°
 
 
 def _close(alt, az, want_alt, want_az):
@@ -43,34 +42,46 @@ def test_star_positions(name, alt, az):
     assert _close(star["alt"], star["az"], alt, az)
 
 
-def test_all_naked_eye_stars_brightest_first():
+def test_bright_stars_brightest_first():
     stars = sky()["stars"]
-    assert len(stars) > 8000
-    assert all(s["vmag"] <= 6.5 for s in stars)
+    assert 80 < len(stars) < 100
+    assert all(s["vmag"] <= 2.5 and s["designation"] for s in stars)
     assert stars[0]["name"] == "Sirius"
 
 
-def test_light_map_has_the_moon_and_the_sun():
+def test_matrix_lights_the_moon_and_not_the_sun():
     data = sky()
-    pixels = base64.b64decode(data["light_map"]["pixels"])
-    assert len(pixels) == MAP_SIZE * MAP_SIZE
-    for body in ("sun", "moon"):
-        x, y = pixel_of(data[body]["alt"], data[body]["az"], MAP_SIZE, MAP_SIZE)
-        assert pixels[y * MAP_SIZE + x] == magnitude_to_value(data[body]["vmag"])
-    assert max(pixels) == 255  # the Sun
+    matrix = data["light_matrix"]
+    leds = matrix["leds"]
+    assert len(leds) == MATRIX_SIZE and all(len(row) == MATRIX_SIZE for row in leds)
+    col, row = cell_of(data["moon"]["alt"], data["moon"]["az"], MATRIX_SIZE)
+    assert leds[row][col] == max(v for line in leds for v in line)  # the Moon outshines every star
+    assert cell_of(data["sun"]["alt"], data["sun"]["az"], MATRIX_SIZE) is None  # set hours ago
+    names = {light["name"] for light in matrix["lit"]}
+    assert {"Moon", "Sirius", "Betelgeuse", "Polaris"} <= names
+    assert "Sun" not in names and "Vega" not in names
+    for light in matrix["lit"]:
+        assert leds[light["row"]][light["col"]] > 0
 
 
-def test_render_adds_light_in_one_pixel():
-    one = render([(10.0, 10.0, 1.0)], 4, 4)
-    two = render([(10.0, 10.0, 1.0), (10.1, 10.1, 1.0)], 4, 4)
-    assert sum(1 for p in one if p) == 1
-    assert max(two) > max(one)  # two equal stars ≈ 0.75 mag brighter
+def test_render_adds_light_in_one_cell():
+    one = render([(80.0, 10.0, 1.0)], 8)
+    two = render([(80.0, 10.0, 1.0), (80.1, 10.1, 1.0)], 8)
+    assert sum(1 for line in one for v in line if v > 0) == 1
+    assert max(map(max, two)) > max(map(max, one))  # two equal stars ≈ 0.75 mag brighter
 
 
-def test_pixel_of_covers_the_whole_sphere():
-    assert pixel_of(90, 0, 512, 512) == (0, 0)
-    assert pixel_of(-90, 359.99, 512, 512) == (511, 511)
-    assert pixel_of(0, 180, 512, 512) == (256, 256)
+def test_dome_projection():
+    assert cell_of(90, 0, 32) == (16, 16)  # zenith in the centre
+    assert cell_of(0, 0, 32)[1] == 0  # north horizon at the top
+    assert cell_of(0, 90, 32)[0] == 0  # east on the left, as seen looking up
+    assert cell_of(0, 180, 32)[1] == 31
+    assert cell_of(0, 270, 32)[0] == 31
+    assert cell_of(-0.1, 0, 32) is None
+    # Every horizon point lands on an LED inside the dome; the corners have none.
+    assert all(in_dome(*cell_of(0, az, 32), 32) for az in range(360))
+    assert render([], 32)[0][0] == NO_LED
+    assert magnitude_to_value(-26.74) == 255 and magnitude_to_value(2.5) == 1
 
 
 def test_endpoint_requires_login(client):

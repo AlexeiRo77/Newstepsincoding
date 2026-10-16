@@ -2,7 +2,7 @@
 
 Algorithms from Jean Meeus, *Astronomical Algorithms* (2nd ed.): Sun (ch. 25, low accuracy),
 Moon (ch. 47, main periodic terms), precession (ch. 21), sidereal time (ch. 12). Accuracy is a few
-arcminutes at worst, well below one light-map pixel (~0.7°). Nutation and aberration (< 1′) are ignored.
+arcminutes at worst, far below one light-matrix cell (~6°). Nutation and aberration (< 1′) are ignored.
 Altitudes are geometric (no atmospheric refraction); the Moon's is topocentric (parallax applied).
 """
 

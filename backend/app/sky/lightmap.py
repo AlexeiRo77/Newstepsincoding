@@ -1,12 +1,12 @@
-"""The light map: the whole sky (above and below the horizon) as a grid of pixels whose value is the light
-that falls in them.
+"""The light matrix: the visible sky dome as a square grid of LEDs, each lit by the light that falls in it.
 
-Projection: equirectangular in horizontal coordinates. Column x covers azimuth 0°→360° (N, E, S, W, N
-left to right); row y covers altitude +90° (zenith, top) → −90° (nadir, bottom); the horizon is the
-middle row boundary.
+Projection: azimuthal equidistant, as on a star chart held overhead. The zenith is the centre of the
+grid and the horizon the inscribed circle; north is up, east left, south down, west right. The
+distance from the centre is proportional to the zenith distance (90° − altitude). Cells whose centre
+lies outside the horizon circle have no LED (value −1). Objects below the horizon are not shown.
 
-Pixel value (one byte): 0 = no light. Otherwise the summed light of everything in the pixel, as a
-magnitude m, mapped linearly from the naked-eye limit (value 1) to the Sun (value 255):
+LED value: 0 = dark. Otherwise the summed light of everything in the cell, as a magnitude m, mapped
+linearly from the faintest catalogued star (value 1) to the Sun (value 255):
     value = 1 + 254 · (LIMIT − m) / (LIMIT − SUN)
 """
 
@@ -17,24 +17,47 @@ from collections.abc import Iterable
 
 from app.sky.astro import SUN_VMAG
 
-NAKED_EYE_LIMIT = 6.5
+BRIGHT_LIMIT = 2.5
+NO_LED = -1
 
 
-def pixel_of(alt: float, az: float, width: int, height: int) -> tuple[int, int]:
-    x = min(int(az % 360 / 360 * width), width - 1)
-    y = min(int((90 - alt) / 180 * height), height - 1)
-    return x, y
+def cell_of(alt: float, az: float, size: int) -> tuple[int, int] | None:
+    """(column, row) of the LED showing a point of the sky, or None below the horizon."""
+    if alt < 0:
+        return None
+    centre = size / 2
+    # Scaled to stop 0.75 cell short of the edge, so a horizon object's cell centre stays inside the dome.
+    r = (90 - alt) / 90 * (centre - 0.75)
+    x = centre - r * math.sin(math.radians(az))
+    y = centre - r * math.cos(math.radians(az))
+    return min(int(x), size - 1), min(int(y), size - 1)
+
+
+def in_dome(col: int, row: int, size: int) -> bool:
+    centre = size / 2
+    return math.hypot(col + 0.5 - centre, row + 0.5 - centre) <= centre
 
 
 def magnitude_to_value(mag: float) -> int:
-    scaled = 1 + 254 * (NAKED_EYE_LIMIT - mag) / (NAKED_EYE_LIMIT - SUN_VMAG)
+    scaled = 1 + 254 * (BRIGHT_LIMIT - mag) / (BRIGHT_LIMIT - SUN_VMAG)
     return max(1, min(255, round(scaled)))
 
 
-def render(lights: Iterable[tuple[float, float, float]], width: int, height: int) -> bytes:
-    """Row-major bytes for (alt, az, vmag) light sources; sources in one pixel add up their flux."""
-    flux = [0.0] * (width * height)
+def render(lights: Iterable[tuple[float, float, float]], size: int) -> list[list[int]]:
+    """Rows of LED values for (alt, az, vmag) light sources; sources in one cell add up their flux."""
+    flux = [[0.0] * size for _ in range(size)]
     for alt, az, mag in lights:
-        x, y = pixel_of(alt, az, width, height)
-        flux[y * width + x] += 10 ** (-0.4 * mag)
-    return bytes(0 if f == 0 else magnitude_to_value(-2.5 * math.log10(f)) for f in flux)
+        cell = cell_of(alt, az, size)
+        if cell:
+            flux[cell[1]][cell[0]] += 10 ** (-0.4 * mag)
+    return [
+        [
+            NO_LED
+            if not in_dome(col, row, size)
+            else 0
+            if f == 0
+            else magnitude_to_value(-2.5 * math.log10(f))
+            for col, f in enumerate(line)
+        ]
+        for row, line in enumerate(flux)
+    ]
