@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.auth import resolve_session_secret
 from app.config import is_local_env
 from app.db import get_session
-from app.routes import auth
+from app.routes import auth, sky
 
 # Refuse to start with a forgeable signing key outside local development.
 resolve_session_secret()
@@ -23,6 +23,7 @@ app = FastAPI(
     openapi_url="/openapi.json" if _docs else None,
 )
 app.include_router(auth.router)
+app.include_router(sky.router)
 
 
 @app.get("/api/health")

@@ -64,3 +64,28 @@ button:disabled { opacity: 0.6; cursor: default; }
 dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; }
 dt { color: var(--muted); }
 dd { margin: 0; overflow-wrap: anywhere; }
+
+.page:has(.sky) { max-width: 900px; }
+.sky h2 { margin-top: 28px; font-size: 1.15rem; }
+.sky .small { font-size: 0.85rem; }
+.matrix { display: block; width: 100%; max-width: 760px; height: auto; margin: 0 auto; }
+.matrix .led-on { cursor: pointer; }
+/* SVG text sizes are in viewBox units, so they scale with the matrix; phones get larger ones. */
+.matrix-label {
+  font: 600 12px system-ui, sans-serif; fill: rgba(200, 215, 255, 0.9); pointer-events: none;
+  paint-order: stroke; stroke: #04060c; stroke-width: 3px;
+}
+.matrix-label.moon { font-size: 14px; fill: #fff3cf; }
+.matrix-compass { font: 700 15px system-ui, sans-serif; fill: rgba(255, 180, 110, 0.95); }
+@media (max-width: 480px) {
+  .matrix-label { font-size: 20px; stroke-width: 4px; }
+  .matrix-label.moon { font-size: 23px; }
+  .matrix-compass { font-size: 26px; }
+}
+.matrix-readout { text-align: center; min-height: 1.4em; margin: 6px 0 0; }
+.table-scroll { overflow-x: auto; }
+.positions { border-collapse: collapse; width: 100%; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+.positions th, .positions td { padding: 6px 10px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.positions th:first-child, .positions td:first-child { text-align: left; }
+.positions th { color: var(--muted); font-weight: 600; }
+.positions tr.below td { color: var(--muted); }
