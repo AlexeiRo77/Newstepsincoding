@@ -1,9 +1,10 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth'
 
-// The frame around every signed-in page: navigation, the user's email and a logout button.
+// The frame around every page but login/signup: navigation, the user's email and a logout button.
+// A signed-out visitor (on a public page) sees only the public link and a "Log in" link.
 export default function Layout() {
-  const { user, logout } = useAuth()
+  const { user, loading, logout } = useAuth()
   const navigate = useNavigate()
 
   async function onLogout() {
@@ -19,16 +20,23 @@ export default function Layout() {
       <header className="topbar">
         <strong>Newstepsincoding</strong>
         <nav>
-          <NavLink to="/" end>
-            Home
-          </NavLink>
-          <NavLink to="/profile">Profile</NavLink>
+          {user && (
+            <NavLink to="/" end>
+              Home
+            </NavLink>
+          )}
+          {user && <NavLink to="/profile">Profile</NavLink>}
           <NavLink to="/sky">Sky 1977</NavLink>
-          <NavLink to="/waves">Waves</NavLink>
-          <NavLink to="/body-waves">Body waves</NavLink>
+          {user && <NavLink to="/waves">Waves</NavLink>}
+          {user && <NavLink to="/body-waves">Body waves</NavLink>}
         </nav>
-        <span className="muted">{user?.email}</span>
-        <button onClick={onLogout}>Log out</button>
+        {user && (
+          <>
+            <span className="muted">{user.email}</span>
+            <button onClick={onLogout}>Log out</button>
+          </>
+        )}
+        {!user && !loading && <Link to="/login">Log in</Link>}
       </header>
       <main className="page">
         <Outlet />

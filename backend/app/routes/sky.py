@@ -9,10 +9,8 @@ from datetime import UTC, datetime, timedelta, timezone
 from functools import cache
 from pathlib import Path
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
-from app.auth import current_user
-from app.models import User
 from app.sky import astro
 from app.sky.lightmap import BRIGHT_LIMIT, cell_of, render
 
@@ -106,6 +104,7 @@ def sky() -> dict:
     }
 
 
+# Public on purpose: the 1977 sky is fixed, non-personal data, shared by link without a login.
 @router.get("")
-def get_sky(user: User = Depends(current_user)) -> dict:
+def get_sky() -> dict:
     return sky()
