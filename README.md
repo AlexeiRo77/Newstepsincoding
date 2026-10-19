@@ -2,7 +2,7 @@
 
 A starter web app: a **FastAPI** backend, a **React + TypeScript** frontend and a **Postgres** database,
 with sign-up, login and logout already working and two placeholder pages (Home, Profile) behind the login.
-The 1977 sky light matrix (`/sky`) and the waves drawing (`/waves`) are public.
+The 1977 sky light matrix (`/sky`) and the waves drawings (`/waves`, `/body-waves`) are public.
 
 ## Getting started
 

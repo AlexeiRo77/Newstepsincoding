@@ -14,16 +14,16 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
-      {/* The 1977 sky and the waves drawing are public: shared by link, no login needed. */}
+      {/* The 1977 sky and the two waves drawings are public: shared by link, no login needed. */}
       <Route element={<Layout />}>
         <Route path="/sky" element={<Sky />} />
         <Route path="/waves" element={<Waves />} />
+        <Route path="/body-waves" element={<BodyWaves />} />
       </Route>
       <Route element={<RequireAuth />}>
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/body-waves" element={<BodyWaves />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
