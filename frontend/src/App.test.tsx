@@ -78,3 +78,11 @@ test('the sky page is public: a signed-out visitor sees it with a log-in link', 
   expect(screen.queryByRole('heading', { name: 'Log in' })).not.toBeInTheDocument()
   expect(screen.queryByRole('link', { name: 'Profile' })).not.toBeInTheDocument()
 })
+
+test('the waves page is public: a signed-out visitor sees the drawing', async () => {
+  mockBackend()
+  renderAt('/waves')
+  expect(await screen.findByRole('heading', { name: 'Brain wave' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: 'Log in' })).not.toBeInTheDocument()
+})

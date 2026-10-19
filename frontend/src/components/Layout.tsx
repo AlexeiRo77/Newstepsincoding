@@ -2,7 +2,7 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth'
 
 // The frame around every page but login/signup: navigation, the user's email and a logout button.
-// A signed-out visitor (on a public page) sees only the public link and a "Log in" link.
+// A signed-out visitor (on a public page) sees only the public links and a "Log in" link.
 export default function Layout() {
   const { user, loading, logout } = useAuth()
   const navigate = useNavigate()
@@ -27,7 +27,7 @@ export default function Layout() {
           )}
           {user && <NavLink to="/profile">Profile</NavLink>}
           <NavLink to="/sky">Sky 1977</NavLink>
-          {user && <NavLink to="/waves">Waves</NavLink>}
+          <NavLink to="/waves">Waves</NavLink>
           {user && <NavLink to="/body-waves">Body waves</NavLink>}
         </nav>
         {user && (
