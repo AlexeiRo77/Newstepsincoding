@@ -24,6 +24,7 @@ from app.auth import (
 )
 from app.db import get_session
 from app.models import User
+from app.ratelimit import LOGIN_FAILURES, LOGIN_FAILURES_PER_ADDRESS, SIGNUPS, client_key, enforce
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -43,11 +44,12 @@ def _out(user: User) -> UserOut:
 
 
 @router.post("/signup", response_model=UserOut, status_code=201)
-def signup(body: Credentials, response: Response, session: Session = Depends(get_session)):
-    """Create an account and sign it in. 409 if the email is taken."""
+def signup(body: Credentials, request: Request, response: Response, session: Session = Depends(get_session)):
+    """Create an account and sign it in. 409 if the email is taken; 429 past the per-IP sign-up limit."""
     problem = password_problem(body.password)
     if problem:
         raise HTTPException(status_code=422, detail=problem)
+    enforce(SIGNUPS, client_key(request))
     user = User(email=normalize_email(body.email), password_hash=hash_password(body.password))
     session.add(user)
     try:
@@ -60,14 +62,26 @@ def signup(body: Credentials, response: Response, session: Session = Depends(get
 
 
 @router.post("/login", response_model=UserOut)
-def login(body: Credentials, response: Response, session: Session = Depends(get_session)):
-    """One answer for an unknown email and a wrong password, at the same bcrypt cost."""
-    user = session.scalars(select(User).where(User.email == normalize_email(body.email))).first()
+def login(body: Credentials, request: Request, response: Response, session: Session = Depends(get_session)):
+    """One answer for an unknown email and a wrong password, at the same bcrypt cost; 429 past the per-IP
+    failed-login limits (app.ratelimit), which a successful login does not use up."""
+    email = normalize_email(body.email)
+    address = client_key(request)
+    account = f"{address} {email}"
+    enforce(LOGIN_FAILURES_PER_ADDRESS, address)
+    try:
+        enforce(LOGIN_FAILURES, account)
+    except HTTPException:
+        LOGIN_FAILURES_PER_ADDRESS.release(address)
+        raise
+    user = session.scalars(select(User).where(User.email == email)).first()
     if user is None:
         verify_password(body.password, dummy_password_hash())
         raise HTTPException(status_code=401, detail="invalid_credentials")
     if not verify_password(body.password, user.password_hash):
         raise HTTPException(status_code=401, detail="invalid_credentials")
+    LOGIN_FAILURES_PER_ADDRESS.release(address)
+    LOGIN_FAILURES.release(account)
     set_session_cookie(response, user)
     return _out(user)
 
