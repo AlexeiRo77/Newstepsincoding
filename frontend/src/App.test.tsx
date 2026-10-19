@@ -59,15 +59,13 @@ test('log in lands on the page that was asked for, and log out returns to login'
   expect(await screen.findByRole('heading', { name: 'Log in' })).toBeInTheDocument()
 })
 
-test('the body waves page is behind login and opens once signed in', async () => {
+test('the body waves page is public: a signed-out visitor sees the picture', async () => {
   mockBackend()
-  const user = userEvent.setup()
   renderAt('/body-waves')
-  await user.type(await screen.findByLabelText('Email'), 'ada@example.com')
-  await user.type(screen.getByLabelText('Password'), 'correct horse')
-  await user.click(screen.getByRole('button', { name: 'Log in' }))
   expect(await screen.findByRole('heading', { name: 'Waves from the human body' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Body waves' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: 'Log in' })).not.toBeInTheDocument()
 })
 
 test('the sky page is public: a signed-out visitor sees it with a log-in link', async () => {
