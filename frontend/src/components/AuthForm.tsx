@@ -8,6 +8,7 @@ const MESSAGES: Record<string, string> = {
   email_taken: 'An account with this email already exists.',
   password_too_short: 'The password must be at least 8 characters.',
   password_too_long: 'The password must be at most 128 characters.',
+  too_many_attempts: 'Too many attempts from your network. Please wait a few minutes and try again.',
 }
 
 function message(err: unknown): string {

@@ -73,6 +73,13 @@ Not covered yet: browser-level end-to-end tests (e.g. Playwright) and any migrat
 - Login answers an unknown email and a wrong password **identically, at the same bcrypt cost** (a dummy
   hash), so it does not reveal which emails have accounts. Sign-up necessarily does reveal a taken email
   (409).
+- **Per-IP rate limits** (`backend/app/ratelimit.py`, which holds the thresholds): at most 10 *failed*
+  logins per 5 minutes per address and email, 50 per address across all emails, and 60 sign-ups per hour
+  per address; beyond that the API answers **429 `too_many_attempts`** with `Retry-After`, before any
+  bcrypt work. A successful login is not counted; unknown email and wrong password count alike. An IPv6
+  client is keyed by its /64. The counters are in-memory in the single API process (reset on restart); the
+  client address is the real one because Caddy overwrites `X-Forwarded-For` and uvicorn runs with
+  `--proxy-headers`. Tests reset them in the `client` fixture.
 - Emails are stored lower-cased; the unique index therefore behaves case-insensitively.
 - The backend **refuses to start** with the built-in dev signing key unless `APP_ENV=local` and
   `FRONTEND_URL` is a localhost URL; outside local, `SESSION_SECRET` must be at least 32 characters. The
@@ -80,7 +87,7 @@ Not covered yet: browser-level end-to-end tests (e.g. Playwright) and any migrat
 - Protect a new API route with `user: User = Depends(current_user)`; protect a new page by placing its
   `<Route>` inside the `RequireAuth` element in `App.tsx`.
 
-Deliberately left out of this basic version (present in jaah): rate limiting / lockout, password reset,
+Deliberately left out of this basic version (present in jaah): per-account lockout, password reset,
 email verification, MFA and OAuth sign-in. CSRF protection rests on SameSite=Lax plus JSON-only bodies; an
 Origin check would also cover a hostile sibling subdomain. The local stack (compose file, dev Dockerfiles)
 is not a production deployment; that is `deploy/` (below).

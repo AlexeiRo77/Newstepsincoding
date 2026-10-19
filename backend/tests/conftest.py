@@ -14,6 +14,7 @@ from sqlalchemy.pool import StaticPool  # noqa: E402
 
 from app.db import Base, get_session  # noqa: E402
 from app.main import app  # noqa: E402
+from app.ratelimit import LOGIN_FAILURES, LOGIN_FAILURES_PER_ADDRESS, SIGNUPS  # noqa: E402
 
 
 @pytest.fixture
@@ -30,6 +31,9 @@ def client():
             session.close()
 
     app.dependency_overrides[get_session] = override
+    LOGIN_FAILURES.reset()
+    LOGIN_FAILURES_PER_ADDRESS.reset()
+    SIGNUPS.reset()
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
