@@ -120,7 +120,7 @@ const ELECTROMAGNETIC: Wave[] = [
     color: '#f57f17',
     path: wavePath(biophotons),
     period: 0.1,
-    periodLabel: 'photon counts, ≈ 1 s shown',
+    periodLabel: 'no cycle — photons arrive at random',
   },
 ]
 
@@ -179,7 +179,7 @@ const SOUND: Wave[] = [
     color: '#558b2f',
     path: wavePath(muscle),
     period: 1 / MUSCLE_HZ,
-    periodLabel: '≈ 25 Hz',
+    periodLabel: '≈ 0.04 s (25 Hz)',
   },
   {
     id: 'garyaev',
