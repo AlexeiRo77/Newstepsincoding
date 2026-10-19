@@ -1,0 +1,13 @@
+# SITE_HOST is the public host name; Caddy obtains and renews its Let's Encrypt certificate itself.
+{$SITE_HOST} {
+	encode gzip
+	handle /api/* {
+		reverse_proxy backend:8000
+	}
+	handle {
+		root * /srv
+		# Client-side routes (/sky, /login, …) all load the single-page app.
+		try_files {path} /index.html
+		file_server
+	}
+}

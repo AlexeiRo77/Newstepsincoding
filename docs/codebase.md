@@ -16,7 +16,7 @@ the base to build them on. The login/logout design is a trimmed copy of the one 
 | `backend/app/main.py` | FastAPI app: mounts the routers, `GET /api/health` (checks the database) |
 | `backend/app/auth.py` | Password hashing, session cookie, `current_user` dependency |
 | `backend/app/routes/auth.py` | `POST /api/auth/signup`, `/login`, `/logout`; `GET /api/auth/me` |
-| `backend/app/routes/sky.py` | `GET /api/sky` (login required): Sun, Moon and bright stars (mag ≤ 2.5) over Almaty at 1977-02-03 21:35 (UTC+6), plus the 32 × 32 LED light matrix of the visible sky |
+| `backend/app/routes/sky.py` | `GET /api/sky` (public, no login): Sun, Moon and bright stars (mag ≤ 2.5) over Almaty at 1977-02-03 21:35 (UTC+6), plus the 32 × 32 LED light matrix of the visible sky |
 | `backend/app/sky/` | Pure-Python astronomy (`astro.py`, Meeus algorithms), light-matrix projection and brightness (`lightmap.py`), star catalogue (`bright_stars.csv`, Yale BSC5 trimmed to mag ≤ 2.5) |
 | `backend/app/models.py` | SQLAlchemy tables (`users`) |
 | `backend/app/db.py`, `backend/app/config.py` | Engine/session dependency; settings from env vars |
@@ -24,7 +24,7 @@ the base to build them on. The login/logout design is a trimmed copy of the one 
 | `backend/tests/` | pytest suite (`test_*.py`) and the end-to-end `smoke.py` |
 | `frontend/src/auth.tsx` | `AuthProvider` / `useAuth()`: current user, login, signup, logout |
 | `frontend/src/api.ts` | `get` / `post` JSON helpers; errors become `ApiError` |
-| `frontend/src/App.tsx` | Routes: public `/login`, `/signup`; `/`, `/profile`, `/sky`, `/waves` and `/body-waves` behind `RequireAuth` |
+| `frontend/src/App.tsx` | Routes: public `/login`, `/signup`, `/sky`; `/`, `/profile`, `/waves` and `/body-waves` behind `RequireAuth` |
 | `frontend/src/pages/Sky.tsx` | The 1977 sky page: draws the light matrix as SVG LEDs and lists the positions |
 | `frontend/src/pages/Waves.tsx` | Static SVG drawing of a brain, radio, sound and light wave with their real frequencies (frontend only) |
 | `frontend/src/pages/BodyWaves.tsx` | Body figure plus SVG panels of the body's electromagnetic waves and organ sounds; Garyaev's "wave genome" shown as an unconfirmed hypothesis (frontend only) |
@@ -32,6 +32,7 @@ the base to build them on. The login/logout design is a trimmed copy of the one 
 | `frontend/src/pages/`, `frontend/src/components/` | Pages and the shared layout, form and login guard |
 | `frontend/src/styles.css` | All styling (plain CSS, no framework) |
 | `docker-compose.yml`, `*/Dockerfile` | The local stack: `db`, `backend`, `frontend` |
+| `deploy/` | Production stack and the AWS deploy script — see [Deployment](#deployment) |
 | `dc` | The one entry point for the stack and the two gates |
 
 ## How it runs
@@ -56,6 +57,7 @@ A change to `requirements*.txt`, `package.json`, a Dockerfile or `vite.config.ts
 | `tsc` | quick | Frontend type-check |
 | `vitest` (`frontend/src/*.test.tsx`) | quick | Login redirect, login/logout flow, the sky page and the two wave pages, with a mocked backend |
 | `vite build` | full | The production bundle builds |
+| `deploy/` web image + `caddy validate` | full | The production web image builds and its Caddyfile is valid |
 | `backend/tests/smoke.py` | full | Real stack end to end: frontend proxy → API → Postgres (signup, me, logout, login) |
 
 Not covered yet: browser-level end-to-end tests (e.g. Playwright) and any migration-vs-model drift check.
@@ -81,7 +83,23 @@ Not covered yet: browser-level end-to-end tests (e.g. Playwright) and any migrat
 Deliberately left out of this basic version (present in jaah): rate limiting / lockout, password reset,
 email verification, MFA and OAuth sign-in. CSRF protection rests on SameSite=Lax plus JSON-only bodies; an
 Origin check would also cover a hostile sibling subdomain. The local stack (compose file, dev Dockerfiles)
-is not a production deployment.
+is not a production deployment; that is `deploy/` (below).
+
+## Deployment
+
+`./dc deploy` runs `deploy/aws-deploy.sh`: it ships the committed code (HEAD) to one EC2 server and prints
+the public link, `https://<elastic-ip-with-dashes>.sslip.io/sky`. AWS credentials come from the environment
+or `Directory/Secrets/aws.env` ([Directory/Secrets/README.md](../Directory/Secrets/README.md)). It is
+idempotent — the first run creates everything, later runs update the same server — and its header lists
+the AWS resources it creates (all named `newstepsincoding-…`).
+
+- **No SSH.** The script reaches the server through AWS Systems Manager; the code travels as a bundle in a
+  private S3 bucket behind a short-lived presigned link.
+- **On the server** (`/opt/newstepsincoding`), `deploy/docker-compose.prod.yml` runs Postgres, the API
+  (no reload, `APP_ENV=production`) and Caddy (`deploy/web.Dockerfile`, `deploy/Caddyfile`), which serves
+  the built frontend, proxies `/api` and gets the Let's Encrypt certificate. Only ports 80/443 are open.
+- **Secrets** (`POSTGRES_PASSWORD`, `SESSION_SECRET`) are generated on the server at first deploy into
+  `deploy/.env` there; they never leave it and later deploys keep them. The database volume survives deploys.
 
 ## Conventions
 

@@ -7,6 +7,7 @@
 #   ./dc ps | logs [service] | build
 #   ./dc check quick   lint, type-check and unit tests (backend + frontend)
 #   ./dc check full    quick + production build + end-to-end smoke test on the running stack
+#   ./dc deploy        deploy the committed code (HEAD) to AWS and print its HTTPS link (deploy/aws-deploy.sh)
 #
 # Needs only Docker. Ports and the stack name default as in docker-compose.yml; a .env file
 # (see .env.example) may override them.
@@ -41,6 +42,11 @@ done
 export FRONTEND_URL="${FRONTEND_URL:-http://localhost:${FRONTEND_PORT:-5173}}"
 
 dco() { docker compose "$@"; }
+# The production stack (deploy/), with stand-in settings: the gate only builds and validates it.
+prod() {
+  SITE_HOST=localhost POSTGRES_PASSWORD=gate SESSION_SECRET=gate \
+    docker compose -f deploy/docker-compose.prod.yml "$@"
+}
 
 # Each step is chained with && (or returns on failure): `set -e` does not apply inside a function
 # called from `cmd || rc=$?`, so a bare sequence would hide every failure but the last.
@@ -57,6 +63,10 @@ check_full() {
   check_quick || return $?
   echo "== frontend: production build"
   dco run --rm --no-deps -T frontend npm run build || return $?
+  echo "== deploy: production web image and its Caddyfile"
+  prod build web &&
+    prod run --rm --no-deps -T --entrypoint caddy web validate --config /etc/caddy/Caddyfile >/dev/null &&
+    prod down || return $?
   echo "== stack: end-to-end smoke"
   # Leave the stack as we found it: stop it afterwards only if nothing of it was running before.
   local was_up rc=0
@@ -90,6 +100,7 @@ case "$cmd" in
     ;;
   ps | logs | build) dco "$cmd" "$@" ;;
   check) gate "${1:-quick}" ;;
-  help | -h | --help) sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//' ;;
+  deploy) exec deploy/aws-deploy.sh "$@" ;;
+  help | -h | --help) sed -n '2,13p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) echo "dc: unknown command '$cmd' (try ./dc help)" >&2; exit 2 ;;
 esac

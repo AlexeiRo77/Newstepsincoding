@@ -69,3 +69,12 @@ test('the body waves page is behind login and opens once signed in', async () =>
   expect(await screen.findByRole('heading', { name: 'Waves from the human body' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Body waves' })).toBeInTheDocument()
 })
+
+test('the sky page is public: a signed-out visitor sees it with a log-in link', async () => {
+  mockBackend()
+  renderAt('/sky')
+  expect(await screen.findByRole('link', { name: 'Log in' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Sky 1977' })).toBeInTheDocument()
+  expect(screen.queryByRole('heading', { name: 'Log in' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: 'Profile' })).not.toBeInTheDocument()
+})

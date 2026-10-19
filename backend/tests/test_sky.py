@@ -8,7 +8,6 @@ import pytest
 from app.routes.sky import MATRIX_SIZE, sky
 from app.sky.lightmap import NO_LED, cell_of, in_dome, magnitude_to_value, render
 
-CREDS = {"email": "sky@example.com", "password": "correct horse"}
 TOLERANCE_DEG = 0.05  # a light-matrix cell is ~6°
 
 
@@ -84,9 +83,7 @@ def test_dome_projection():
     assert magnitude_to_value(-26.74) == 255 and magnitude_to_value(2.5) == 1
 
 
-def test_endpoint_requires_login(client):
-    assert client.get("/api/sky").status_code == 401
-    client.post("/api/auth/signup", json=CREDS)
+def test_endpoint_is_public(client):
     r = client.get("/api/sky")
     assert r.status_code == 200
     assert r.json()["observer"]["utc_time"] == "1977-02-03T15:35:00+00:00"

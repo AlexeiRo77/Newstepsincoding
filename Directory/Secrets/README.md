@@ -11,12 +11,14 @@ The AWS access key pair used to deploy the app.
 2. Fill in `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_DEFAULT_REGION` in `aws.env`.
 3. Confirm git ignores it: `git check-ignore Directory/Secrets/aws.env` prints the path.
 
+`./dc deploy` loads it automatically when no AWS credentials are set in the environment.
 Load it into a shell for the AWS CLI with `set -a; . Directory/Secrets/aws.env; set +a`.
 Use an IAM user scoped to deployment only, and rotate the key if the file is ever exposed.
 
 ## SSH key pair (EC2 deployment)
 
-The OpenSSH key pair used to log in to the EC2 host the app deploys to. Generate it on your own
+Optional: `./dc deploy` needs no SSH (it uses AWS Systems Manager). An OpenSSH key pair to log in to the
+EC2 host by hand. Generate it on your own
 machine so the private key never leaves it, and protect it with a passphrase.
 
 1. Generate an ed25519 pair (`ssh-keygen` prompts for the passphrase):
