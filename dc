@@ -60,16 +60,18 @@ check_quick() {
 }
 
 check_full() {
+  local rc=0
   check_quick || return $?
   echo "== frontend: production build"
   dco run --rm --no-deps -T frontend npm run build || return $?
   echo "== deploy: production web image and its Caddyfile"
   prod build web &&
-    prod run --rm --no-deps -T --entrypoint caddy web validate --config /etc/caddy/Caddyfile >/dev/null &&
-    prod down || return $?
+    prod run --rm --no-deps -T --entrypoint caddy web validate --config /etc/caddy/Caddyfile >/dev/null || rc=$?
+  prod down -v >/dev/null 2>&1 || true
+  [ "$rc" -eq 0 ] || return "$rc"
   echo "== stack: end-to-end smoke"
   # Leave the stack as we found it: stop it afterwards only if nothing of it was running before.
-  local was_up rc=0
+  local was_up
   was_up="$(dco ps -q --status running 2>/dev/null || true)"
   [ -n "$was_up" ] && echo "(the running stack is updated to the code being checked)"
   dco up -d --wait || rc=$?

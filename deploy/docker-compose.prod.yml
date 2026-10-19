@@ -1,7 +1,8 @@
 # The production stack: Caddy (HTTPS + the built frontend) in front of the API and Postgres. Run on the
 # server by deploy/aws-deploy.sh; its settings come from the server-only deploy/.env (never in git).
 # Only Caddy publishes host ports; the API and the database are reachable inside the stack only.
-# On the server COMPOSE_PROJECT_NAME is unset; in a checkout ./dc sets it, keeping gate runs apart.
+# On the server COMPOSE_PROJECT_NAME is unset; in a checkout ./dc takes it from .env (the pool sets it
+# per worktree), keeping gate runs apart.
 name: ${COMPOSE_PROJECT_NAME:-newstepsincoding}-prod
 
 services:

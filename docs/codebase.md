@@ -91,7 +91,8 @@ is not a production deployment; that is `deploy/` (below).
 the public link, `https://<elastic-ip-with-dashes>.sslip.io/sky`. AWS credentials come from the environment
 or `Directory/Secrets/aws.env` ([Directory/Secrets/README.md](../Directory/Secrets/README.md)). It is
 idempotent — the first run creates everything, later runs update the same server — and its header lists
-the AWS resources it creates (all named `newstepsincoding-…`).
+the AWS resources it creates (all named `newstepsincoding-…`). Unlike the stack and the gates, it needs the AWS CLI v2, git, curl and
+python3 on the machine it runs from.
 
 - **No SSH.** The script reaches the server through AWS Systems Manager; the code travels as a bundle in a
   private S3 bucket behind a short-lived presigned link.
