@@ -2,31 +2,7 @@
 // The shapes are illustrative — chosen so each kind is recognisable, not drawn to a common scale; the real
 // numbers are in each panel's caption. Everything is computed here; no API call.
 
-const W = 720 // drawing width (viewBox units)
-const H = 172 // drawing height: a 40-unit band on top for the one-cycle bracket, then the wave
-const MID = 104
-const AMP = 52 // half-height of a full-size wave
-const SAMPLES = 600
-
-// y = f(x) for x in 0…1 (left to right), f in −1…1, as an SVG path.
-function wavePath(f: (x: number) => number): string {
-  const pts: string[] = []
-  for (let i = 0; i <= SAMPLES; i++) {
-    const x = i / SAMPLES
-    pts.push(`${(x * W).toFixed(1)},${(MID - AMP * f(x)).toFixed(1)}`)
-  }
-  return `M${pts.join('L')}`
-}
-
-const TAU = 2 * Math.PI
-
-// An alpha rhythm (10 Hz) waxing and waning, with faster beta ripple and a little irregular drift —
-// the look of a real EEG trace. Fixed frequencies keep the picture the same on every render.
-const eeg = (x: number) =>
-  (0.55 + 0.3 * Math.sin(TAU * 1.3 * x)) * Math.sin(TAU * 10 * x) +
-  0.18 * Math.sin(TAU * 23 * x + 1) +
-  0.12 * Math.sin(TAU * 37 * x + 2) +
-  0.1 * Math.sin(TAU * 3.1 * x + 0.5)
+import { eeg, MID, TAU, W, type Wave, WavePanel, wavePath } from '../components/WavePanel'
 
 // AM radio: a fast carrier whose height follows a slow audio signal (the envelope).
 const RADIO_CARRIER = 36
@@ -47,18 +23,6 @@ const SOUND_PARTICLES = Array.from({ length: 140 }, (_, i) => {
 const LIGHT_CYCLES = 30
 const light = (x: number) => Math.sin(TAU * LIGHT_CYCLES * x)
 const SPECTRUM = ['#7b2cbf', '#3a0ca3', '#0077ff', '#00b4d8', '#2dc653', '#ffd60a', '#ff8800', '#e01e37']
-
-interface Wave {
-  id: string
-  title: string
-  what: string
-  facts: [string, string][]
-  color: string
-  path: string
-  // One period of the drawn wave, as a fraction of the width, for the bracket over the first cycle.
-  period: number
-  periodLabel: string
-}
 
 const WAVES: Wave[] = [
   {
@@ -119,7 +83,7 @@ const WAVES: Wave[] = [
   },
 ]
 
-function Extras({ id }: { id: string }) {
+function extras(id: string) {
   if (id === 'radio') {
     const upper = wavePath(radioEnvelope)
     const lower = wavePath((x) => -radioEnvelope(x))
@@ -154,37 +118,6 @@ function Extras({ id }: { id: string }) {
   return null
 }
 
-function WavePanel({ wave }: { wave: Wave }) {
-  const bracketEnd = wave.period * W
-  return (
-    <figure className="wave">
-      <figcaption>
-        <h2>{wave.title}</h2>
-        <p>{wave.what}</p>
-      </figcaption>
-      <svg className="wave-plot" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${wave.title} drawing`}>
-        <Extras id={wave.id} />
-        <line className="wave-axis" x1={0} x2={W} y1={MID} y2={MID} />
-        <path className="wave-line" d={wave.path} stroke={wave.color} />
-        <g className="wave-bracket">
-          <path d={`M0,10 V4 H${bracketEnd} V10`} />
-          <text x={bracketEnd + 6} y={2} dominantBaseline="hanging">
-            {wave.periodLabel}
-          </text>
-        </g>
-      </svg>
-      <dl className="wave-facts">
-        {wave.facts.map(([k, v]) => (
-          <div key={k}>
-            <dt>{k}</dt>
-            <dd>{v}</dd>
-          </div>
-        ))}
-      </dl>
-    </figure>
-  )
-}
-
 export default function Waves() {
   return (
     <div className="waves">
@@ -195,7 +128,7 @@ export default function Waves() {
         cycle.
       </p>
       {WAVES.map((w) => (
-        <WavePanel key={w.id} wave={w} />
+        <WavePanel key={w.id} wave={{ ...w, extras: extras(w.id) }} />
       ))}
     </div>
   )

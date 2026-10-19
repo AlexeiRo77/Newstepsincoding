@@ -24,9 +24,11 @@ the base to build them on. The login/logout design is a trimmed copy of the one 
 | `backend/tests/` | pytest suite (`test_*.py`) and the end-to-end `smoke.py` |
 | `frontend/src/auth.tsx` | `AuthProvider` / `useAuth()`: current user, login, signup, logout |
 | `frontend/src/api.ts` | `get` / `post` JSON helpers; errors become `ApiError` |
-| `frontend/src/App.tsx` | Routes: public `/login`, `/signup`; `/`, `/profile`, `/sky` and `/waves` behind `RequireAuth` |
+| `frontend/src/App.tsx` | Routes: public `/login`, `/signup`; `/`, `/profile`, `/sky`, `/waves` and `/body-waves` behind `RequireAuth` |
 | `frontend/src/pages/Sky.tsx` | The 1977 sky page: draws the light matrix as SVG LEDs and lists the positions |
 | `frontend/src/pages/Waves.tsx` | Static SVG drawing of a brain, radio, sound and light wave with their real frequencies (frontend only) |
+| `frontend/src/pages/BodyWaves.tsx` | Body figure plus SVG panels of the body's electromagnetic waves and organ sounds; Garyaev's "wave genome" shown as an unconfirmed hypothesis (frontend only) |
+| `frontend/src/components/WavePanel.tsx` | The captioned wave panel and path helper both wave pages draw with |
 | `frontend/src/pages/`, `frontend/src/components/` | Pages and the shared layout, form and login guard |
 | `frontend/src/styles.css` | All styling (plain CSS, no framework) |
 | `docker-compose.yml`, `*/Dockerfile` | The local stack: `db`, `backend`, `frontend` |
@@ -52,7 +54,7 @@ A change to `requirements*.txt`, `package.json`, a Dockerfile or `vite.config.ts
 | `ruff check` + `ruff format --check` | quick | Python lint and formatting (config in `backend/pyproject.toml`) |
 | `pytest` (`backend/tests/test_*.py`) | quick | Sign-up, login, logout, cookie tampering, health; sky positions against Skyfield/DE421 reference values — against in-memory SQLite |
 | `tsc` | quick | Frontend type-check |
-| `vitest` (`frontend/src/*.test.tsx`) | quick | Login redirect, login/logout flow, the sky page and the waves page, with a mocked backend |
+| `vitest` (`frontend/src/*.test.tsx`) | quick | Login redirect, login/logout flow, the sky page and the two wave pages, with a mocked backend |
 | `vite build` | full | The production bundle builds |
 | `backend/tests/smoke.py` | full | Real stack end to end: frontend proxy → API → Postgres (signup, me, logout, login) |
 

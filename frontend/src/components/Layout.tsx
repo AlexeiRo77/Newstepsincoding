@@ -25,6 +25,7 @@ export default function Layout() {
           <NavLink to="/profile">Profile</NavLink>
           <NavLink to="/sky">Sky 1977</NavLink>
           <NavLink to="/waves">Waves</NavLink>
+          <NavLink to="/body-waves">Body waves</NavLink>
         </nav>
         <span className="muted">{user?.email}</span>
         <button onClick={onLogout}>Log out</button>
