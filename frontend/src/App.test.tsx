@@ -84,3 +84,11 @@ test('the waves page is public: a signed-out visitor sees the drawing', async ()
   expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument()
   expect(screen.queryByRole('heading', { name: 'Log in' })).not.toBeInTheDocument()
 })
+
+test('the sound-to-EM page is public: a signed-out visitor sees the picture', async () => {
+  mockBackend()
+  renderAt('/sound-em')
+  expect(await screen.findByRole('heading', { name: 'Sound that makes electromagnetic waves' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Sound → EM' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument()
+})

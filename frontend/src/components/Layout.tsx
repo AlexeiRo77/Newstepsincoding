@@ -29,6 +29,7 @@ export default function Layout() {
           <NavLink to="/sky">Sky 1977</NavLink>
           <NavLink to="/waves">Waves</NavLink>
           <NavLink to="/body-waves">Body waves</NavLink>
+          <NavLink to="/sound-em">Sound → EM</NavLink>
         </nav>
         {user && (
           <>
