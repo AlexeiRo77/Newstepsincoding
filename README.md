@@ -18,7 +18,8 @@ You need only [Docker](https://docs.docker.com/get-docker/).
 ```
 
 Sign up on the page that opens, and you are logged in. No configuration file is needed; to change a port
-or a setting, copy `.env.example` to `.env` and edit it.
+or a setting, copy `.env.example` to `.env` and edit it. Every merge into `develop` deploys automatically
+(see [docs/codebase.md](docs/codebase.md#deployment)).
 
 | Service | Default address |
 |---|---|
