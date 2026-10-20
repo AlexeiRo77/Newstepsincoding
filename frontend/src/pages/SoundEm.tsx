@@ -74,7 +74,7 @@ const MECHANISMS: Mechanism[] = [
   {
     id: 'sonoluminescence',
     title: 'Sonoluminescence — sound makes light',
-    what: 'Strong ultrasound in water traps a tiny gas bubble. Each cycle the sound pulls the bubble open, then crushes it; at the instant of collapse the gas inside heats to thousands of degrees and gives off a flash of ultraviolet-to-blue light.',
+    what: 'Strong ultrasound in water traps a tiny gas bubble. Each cycle the sound pulls the bubble open, then crushes it; at the instant of collapse the gas inside heats to thousands of degrees and gives off a flash of bluish-white light, mostly ultraviolet.',
     emName: 'Light flashes',
     emColor: '#5e35b1',
     em: flashes,
@@ -98,7 +98,7 @@ const MECHANISMS: Mechanism[] = [
     facts: [
       ['Sound', 'ultrasound 20–40 kHz in water (shown: 26.5 kHz, one cycle ≈ 38 µs)'],
       ['Threshold', 'about 1.1 atm; above about 1.45 atm the bubble becomes unstable and breaks up'],
-      ['Light', '200–700 nm (ultraviolet to blue), flashes of 50–300 ps, up to about a million photons each'],
+      ['Light', 'broadband, about 200–700 nm, strongest in the ultraviolet; flashes of 50–300 ps, up to about a million photons each'],
       ['Bubble', 'grows from ~5 µm to ~50 µm, collapses to under 1 µm; the gas reaches thousands of kelvin'],
     ],
   },
@@ -111,7 +111,7 @@ const MECHANISMS: Mechanism[] = [
     em: sound,
     timeNote: 'The voltage follows the pressure in step: same frequency, same shape, no threshold.',
     chart: {
-      xLabel: 'Sound pressure amplitude on the crystal, kPa',
+      xLabel: 'Sound pressure amplitude along the crystal’s X axis, kPa',
       yLabel: 'Voltage across a 1 mm quartz plate, V',
       x: [0, 100],
       y: [0, 6],
@@ -120,10 +120,11 @@ const MECHANISMS: Mechanism[] = [
       curve: (p) => QUARTZ_V_PER_KPA * p,
     },
     facts: [
-      ['Material', 'quartz: d₁₁ = 2.3 pC/N, g₁₁ ≈ 0.058 V·m/N'],
+      ['Material', 'quartz, an X-cut plate pressed on its faces: d₁₁ = 2.3 pC/N, g₁₁ ≈ 0.058 V·m/N'],
+      ['Sound', 'ultrasound (shown: 1 MHz, one cycle 1 µs)'],
       ['Dependency', 'straight line: about 58 µV per pascal for a 1 mm plate — 5.8 V at 100 kPa'],
       ['EM wave', 'at the sound frequency: 1 MHz ultrasound gives a 1 MHz field (wavelength 300 m)'],
-      ['Used in', 'hydrophones, contact microphones, ultrasound probes (run backwards, voltage makes sound)'],
+      ['Used in', 'quartz: resonators, microphones, transducers; hydrophones use PZT ceramic or tourmaline (run backwards, voltage makes sound)'],
     ],
   },
   {
