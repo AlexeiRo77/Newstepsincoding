@@ -1,0 +1,43 @@
+# Auto deploy: every merge into develop runs the full gate, then `./dc deploy` (deploy/aws-deploy.sh).
+# Needs the repo secrets AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_DEFAULT_REGION — see
+# docs/codebase.md#deployment. Without them the gate still runs and the deploy step is skipped with a warning.
+name: deploy
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+# One server: deploys queue one behind another, never run side by side or get cancelled half-way.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./dc check full
+
+  deploy:
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to AWS
+        run: |
+          if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+            echo "::warning::Not deployed: repo secrets AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY are not set (see docs/codebase.md#deployment)"
+            exit 0
+          fi
+          ./dc deploy | tee -a "$GITHUB_STEP_SUMMARY"

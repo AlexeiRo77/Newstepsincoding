@@ -11,7 +11,8 @@ The AWS access key pair used to deploy the app.
 2. Fill in `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_DEFAULT_REGION` in `aws.env`.
 3. Confirm git ignores it: `git check-ignore Directory/Secrets/aws.env` prints the path.
 
-`./dc deploy` loads it automatically when no AWS credentials are set in the environment.
+`./dc deploy` loads it automatically when no AWS credentials are set in the environment. The automatic
+deploy on GitHub uses the same three values as repo secrets ([docs/codebase.md](../../docs/codebase.md#deployment)).
 Load it into a shell for the AWS CLI with `set -a; . Directory/Secrets/aws.env; set +a`.
 Use an IAM user scoped to deployment only, and rotate the key if the file is ever exposed.
 

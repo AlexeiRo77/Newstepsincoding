@@ -109,6 +109,11 @@ python3 on the machine it runs from.
   the built frontend, proxies `/api` and gets the Let's Encrypt certificate. Only ports 80/443 are open.
 - **Secrets** (`POSTGRES_PASSWORD`, `SESSION_SECRET`) are generated on the server at first deploy into
   `deploy/.env` there; they never leave it and later deploys keep them. The database volume survives deploys.
+- **Automatic on merge.** `.github/workflows/deploy.yml` runs on every push to `develop` (and by hand from
+  the Actions tab): `./dc check full`, then `./dc deploy` on a GitHub runner. Deploys queue, never overlap.
+  It reads the repo secrets `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_DEFAULT_REGION` (Settings >
+  Secrets and variables > Actions; same values as `Directory/Secrets/aws.env`). Until they are set, the deploy
+  step is skipped with a warning; the deployed link is printed in the run's summary.
 
 ## Conventions
 
