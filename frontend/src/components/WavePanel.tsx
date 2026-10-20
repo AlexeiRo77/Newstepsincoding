@@ -10,12 +10,12 @@ const SAMPLES = 600
 
 export const TAU = 2 * Math.PI
 
-// y = f(x) for x in 0…1 (left to right), f in −1…1, as an SVG path.
-export function wavePath(f: (x: number) => number): string {
+// y = f(x) for x in 0…1 (left to right), f in −1…1, as an SVG path centred on `mid`, `amp` units high.
+export function wavePath(f: (x: number) => number, mid = MID, amp = AMP): string {
   const pts: string[] = []
   for (let i = 0; i <= SAMPLES; i++) {
     const x = i / SAMPLES
-    pts.push(`${(x * W).toFixed(1)},${(MID - AMP * f(x)).toFixed(1)}`)
+    pts.push(`${(x * W).toFixed(1)},${(mid - amp * f(x)).toFixed(1)}`)
   }
   return `M${pts.join('L')}`
 }

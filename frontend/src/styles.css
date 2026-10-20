@@ -113,6 +113,25 @@ dd { margin: 0; overflow-wrap: anywhere; }
 .wave-badge { margin-left: 8px; padding: 2px 8px; border-radius: 999px; background: #ede7f6; color: #4527a0; font-size: 0.75rem; font-weight: 600; vertical-align: middle; white-space: nowrap; }
 .wave-group { margin: 32px 0 0; }
 
+.sem-sub { margin: 16px 0 4px; font-size: 0.95rem; color: var(--muted); }
+.sem-time, .sem-plot { display: block; width: 100%; height: auto; }
+.sem-grid { stroke: var(--border); stroke-width: 1; stroke-dasharray: 3 4; }
+.sem-track-label { font: 600 14px system-ui, sans-serif; }
+.sem-note { margin: 4px 0 0; font-size: 0.9rem; }
+.sem-axis-title { margin: 0; font-size: 0.85rem; color: var(--muted); }
+.sem-x-title { text-align: right; }
+.sem-axes { fill: none; stroke: var(--muted); stroke-width: 1.5; }
+.sem-tick { font: 13px system-ui, sans-serif; fill: var(--muted); }
+.sem-curve { fill: none; stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.sem-mark line { stroke: #e65100; stroke-width: 1.5; stroke-dasharray: 6 5; }
+.sem-mark text { font: 600 13px system-ui, sans-serif; fill: #e65100; }
+.sem-shade rect { fill: #fbe9e7; }
+@media (max-width: 480px) {
+  .sem-track-label { font-size: 26px; }
+  .sem-tick, .sem-mark text { font-size: 24px; }
+  .sem-curve { stroke-width: 5; }
+}
+
 .body-figure { display: block; width: 100%; max-width: 720px; height: auto; margin: 16px auto 0; background: var(--card); border: 1px solid var(--border); border-radius: 8px; }
 .body-figure .body-skin circle, .body-figure .body-skin path { fill: #cfd8dc; }
 .body-figure .body-skin .limb { fill: none; stroke: #cfd8dc; stroke-width: 24; stroke-linecap: round; stroke-linejoin: round; }
