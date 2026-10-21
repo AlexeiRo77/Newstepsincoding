@@ -92,3 +92,11 @@ test('the sound-to-EM page is public: a signed-out visitor sees the picture', as
   expect(screen.getByRole('link', { name: 'Sound → EM' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument()
 })
+
+test('the brain-band emitters page is public: a signed-out visitor sees it', async () => {
+  mockBackend()
+  renderAt('/brain-emitters')
+  expect(await screen.findByRole('heading', { name: 'Emitters in the brain’s frequency range' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Brain-band emitters' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument()
+})

@@ -30,6 +30,7 @@ export default function Layout() {
           <NavLink to="/waves">Waves</NavLink>
           <NavLink to="/body-waves">Body waves</NavLink>
           <NavLink to="/sound-em">Sound → EM</NavLink>
+          <NavLink to="/brain-emitters">Brain-band emitters</NavLink>
         </nav>
         {user && (
           <>
