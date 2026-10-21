@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import RequireAuth from './components/RequireAuth'
 import BodyWaves from './pages/BodyWaves'
+import BrainEmitters from './pages/BrainEmitters'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
@@ -21,6 +22,7 @@ export default function App() {
         <Route path="/waves" element={<Waves />} />
         <Route path="/body-waves" element={<BodyWaves />} />
         <Route path="/sound-em" element={<SoundEm />} />
+        <Route path="/brain-emitters" element={<BrainEmitters />} />
       </Route>
       <Route element={<RequireAuth />}>
         <Route element={<Layout />}>
