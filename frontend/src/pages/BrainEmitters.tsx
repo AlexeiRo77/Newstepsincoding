@@ -55,7 +55,7 @@ const EMITTERS: Emitter[] = [
     title: 'Another person’s brain',
     what: 'The brain itself is an emitter: the currents of firing neurons make a magnetic field outside the head, the one magnetoencephalography (MEG) records.',
     freqs: [[8, 13]],
-    freqLabel: 'all the EEG bands, 0.5–100 Hz (shown: the alpha rhythm, 8–13 Hz, its strongest)',
+    freqLabel: 'the alpha rhythm, 8–13 Hz, its strongest (the brain makes all the bands, 0.5–100 Hz)',
     field: [5e-14, 1e-12],
     fieldLabel: 'about 50 fT – 1 pT at the scalp, falling off within centimetres',
     status: 'reference',
@@ -101,7 +101,7 @@ const EMITTERS: Emitter[] = [
     title: 'Geomagnetic pulsations (Pc1)',
     what: 'Waves in the plasma around the Earth that reach the ground as slow oscillations of the Earth’s magnetic field — “pearls” — strongest at high latitudes.',
     freqs: [[0.5, 5]],
-    freqLabel: '0.2–5 Hz (the part from 0.5 Hz up is in the delta band)',
+    freqLabel: '0.2–5 Hz (from 0.5 Hz up: delta and theta)',
     field: [1e-11, 1e-10],
     fieldLabel: 'about 0.01–0.1 nT',
     status: 'disputed',
@@ -171,7 +171,7 @@ const EMITTERS: Emitter[] = [
     fieldLabel: 'hair dryer 6–2000 µT, shaver 15–1500 µT at 3 cm; under 7 µT at 30 cm (WHO)',
     status: 'disputed',
     effects:
-      'The highest brain-band fields most people meet, but only for minutes and only near the device. The one confirmed effect of such fields on the nervous system, flickering lights seen in the eyes (magnetophosphenes), needs several millitesla and has not been reported from appliances.',
+      'The highest brain-band fields most people meet, but only for minutes and only near the device. The one confirmed effect of such fields on the nervous system, flickering lights seen in the eyes (magnetophosphenes), needs several millitesla and has not been reported from appliances; laboratory 50/60 Hz exposures at up to about 1 mT give small, inconsistent EEG changes.',
     color: '#1976d2',
     dx: 4,
   },
@@ -202,6 +202,9 @@ const EMITTERS: Emitter[] = [
     color: '#5d4037',
   },
 ]
+
+// The one confirmed effect: magnetophosphenes, lowest threshold about 5 mT near 20 Hz (ICNIRP 2010).
+const PHOSPHENE: [number, number] = [20, 5e-3]
 
 // ICNIRP (2010) reference level for the general public, magnetic flux density in tesla.
 export function icnirpLimit(f: number): number {
@@ -268,7 +271,7 @@ function EmitterMarks({ e, n }: { e: Emitter; n: number }) {
         <rect key={r.x} x={r.x} y={top} width={r.w} height={bottom - top} fill={e.color} stroke={e.color} />
       ))}
       <g className="bem-num">
-        <circle cx={cx} cy={cy} fill={e.color} />
+        <circle cx={cx} cy={cy} r={11} fill={e.color} />
         <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central">
           {n}
         </text>
@@ -318,8 +321,14 @@ function EmitterChart() {
         <path className="sem-axes" d={`M${PL},${PT} V${PB} H${PR}`} />
         <g className="sem-mark bem-limit">
           <path d={limitPath()} />
-          <text x={fx(0.6)} y={PT + 20}>
+          <text x={fx(2) - 6} y={PT + 12} textAnchor="end">
             ICNIRP limit
+          </text>
+        </g>
+        <g className="bem-phosphene">
+          <path d={`M${fx(PHOSPHENE[0])},${by(PHOSPHENE[1]) - 9} l9,9 l-9,9 l-9,-9 z`} />
+          <text x={fx(PHOSPHENE[0]) - 14} y={by(PHOSPHENE[1])} textAnchor="end" dominantBaseline="middle">
+            flashes seen<tspan className="bem-wide"> — confirmed</tspan>
           </text>
         </g>
         {EMITTERS.map((e, i) => (
@@ -381,7 +390,7 @@ export default function BrainEmitters() {
       <p className="muted">
         Sharing a frequency with the brain is not the same as acting on it. The one confirmed effect of such fields
         on the nervous system is seeing faint flickering light (magnetophosphenes) at several millitesla, most easily
-        near 20 Hz; the ICNIRP public limit (dashed) is set well below that. Every other effect named below is a
+        near 20 Hz; it is marked ◆ on the chart, and the ICNIRP public limit (dashed) is set well below it. No emitter listed here is confirmed to affect the brain at the levels people meet. Every other effect named below is a
         reported association or a claim, labelled as such.
       </p>
       <EmitterChart />

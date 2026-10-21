@@ -134,7 +134,8 @@ dd { margin: 0; overflow-wrap: anywhere; }
 
 .bem-band text { font: 600 13px system-ui, sans-serif; fill: var(--muted); }
 .bem-mark rect { fill-opacity: 0.35; stroke-width: 1.5; }
-.bem-num circle { r: 11px; }
+.bem-phosphene path { fill: #2e7d32; }
+.bem-phosphene text { font: 600 13px system-ui, sans-serif; fill: #2e7d32; }
 .bem-num text { font: 700 13px system-ui, sans-serif; fill: #fff; }
 .bem-limit path { fill: none; stroke: #e65100; stroke-width: 2; stroke-dasharray: 6 5; }
 .bem-n { display: inline-block; min-width: 1.6em; margin-right: 8px; padding: 0 4px; border-radius: 999px; color: #fff; font-size: 0.85rem; line-height: 1.6em; text-align: center; vertical-align: middle; }
@@ -142,7 +143,8 @@ dd { margin: 0; overflow-wrap: anywhere; }
 .bem-status-not-studied, .bem-status-reference { background: #eceff1; color: #37474f; }
 .bem-status-disputed { background: #fff3e0; color: #e65100; }
 @media (max-width: 480px) {
-  .bem-band text { font-size: 22px; }
+  .bem-band text, .bem-phosphene text { font-size: 22px; }
+  .bem-wide { display: none; }
   .bem-num circle { r: 17px; }
   .bem-num text { font-size: 20px; }
   .bem .wave-badge { display: inline-block; margin: 4px 0 0; }
