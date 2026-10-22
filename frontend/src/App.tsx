@@ -9,6 +9,7 @@ import Profile from './pages/Profile'
 import Signup from './pages/Signup'
 import SoundEm from './pages/SoundEm'
 import Sky from './pages/Sky'
+import SkyBody from './pages/SkyBody'
 import Waves from './pages/Waves'
 
 export default function App() {
@@ -19,6 +20,7 @@ export default function App() {
       {/* The 1977 sky and the waves drawings are public: shared by link, no login needed. */}
       <Route element={<Layout />}>
         <Route path="/sky" element={<Sky />} />
+        <Route path="/sky-body" element={<SkyBody />} />
         <Route path="/waves" element={<Waves />} />
         <Route path="/body-waves" element={<BodyWaves />} />
         <Route path="/sound-em" element={<SoundEm />} />

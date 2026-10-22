@@ -173,3 +173,19 @@ dd { margin: 0; overflow-wrap: anywhere; }
   .body-figure .body-label text { font-size: 25px; }
   .body-figure .body-label .value { font-size: 20px; }
 }
+
+.skb-region rect { stroke: none; }
+.skb-region text { font: 600 13px system-ui, sans-serif; fill: var(--muted); }
+.skb-mark rect { fill-opacity: 0.35; stroke-width: 1.5; }
+.skb-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 8px 0 0; padding: 0; list-style: none; font-size: 0.9rem; }
+.skb-legend .bem-n { margin-right: 6px; }
+.skb-match th, .skb-match td { white-space: normal; vertical-align: top; text-align: left; }
+.skb-match td:last-child { min-width: 16em; }
+@media (max-width: 480px) {
+  .skb-region text { font-size: 24px; }
+  .skb-match thead { display: none; }
+  .skb-match tr { display: block; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .skb-match td { display: grid; grid-template-columns: 6.5em 1fr; gap: 8px; padding: 2px 0; border: 0; }
+  .skb-match td:last-child { min-width: 0; }
+  .skb-match td::before { content: attr(data-label); color: var(--muted); font-weight: 600; }
+}
