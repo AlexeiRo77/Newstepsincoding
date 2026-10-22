@@ -24,13 +24,14 @@ the base to build them on. The login/logout design is a trimmed copy of the one 
 | `backend/tests/` | pytest suite (`test_*.py`) and the end-to-end `smoke.py` |
 | `frontend/src/auth.tsx` | `AuthProvider` / `useAuth()`: current user, login, signup, logout |
 | `frontend/src/api.ts` | `get` / `post` JSON helpers; errors become `ApiError` |
-| `frontend/src/App.tsx` | Routes: public `/login`, `/signup`, `/sky`, `/sky-body`, `/waves`, `/body-waves`, `/sound-em`, `/brain-emitters`; `/` and `/profile` behind `RequireAuth` |
+| `frontend/src/App.tsx` | Routes: public `/login`, `/signup`, `/sky`, `/sky-body`, `/waves`, `/body-waves`, `/sound-em`, `/brain-emitters`, `/matter-ether`; `/` and `/profile` behind `RequireAuth` |
 | `frontend/src/pages/Sky.tsx` | The 1977 sky page: draws the light matrix as SVG LEDs and lists the positions |
 | `frontend/src/pages/SkyBody.tsx` | The light matrix's light (from `GET /api/sky`) against the body's own radiation: one log-log chart of power per m² vs frequency, the numbers, and whether each body wave matches |
 | `frontend/src/pages/Waves.tsx` | Static SVG drawing of a brain, radio, sound and light wave with their real frequencies (frontend only) |
 | `frontend/src/pages/BodyWaves.tsx` | Body figure plus SVG panels of the body's electromagnetic waves and organ sounds; Garyaev's "wave genome" shown as an unconfirmed hypothesis (frontend only) |
 | `frontend/src/pages/SoundEm.tsx` | Sound that makes EM waves: sonoluminescence, piezoelectric and seismoelectric effects, each as sound and EM traces on one time axis plus a chart of EM output vs sound amplitude (frontend only) |
 | `frontend/src/pages/BrainEmitters.tsx` | EM fields at the brain's frequencies (0.5–100 Hz): one log-log chart of field vs frequency against the EEG bands and the ICNIRP limit, then a card per emitter with its numbers and what studies say about effects (frontend only) |
+| `frontend/src/pages/MatterEther.tsx` | Matter/antimatter against the ether: three ether theories (classical, Dirac's sea, quantum vacuum), a spectrum strip with the 511 keV line, pair threshold and CMB peak, annihilation/pair/Dirac-sea drawings, and four comparison cards with what experiments decided (frontend only) |
 | `frontend/src/components/WavePanel.tsx` | The captioned wave panel and path helper both wave pages draw with |
 | `frontend/src/pages/`, `frontend/src/components/` | Pages and the shared layout, form and login guard |
 | `frontend/src/styles.css` | All styling (plain CSS, no framework) |
