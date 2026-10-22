@@ -7,7 +7,7 @@
 #   ./dc ps | logs [service] | build
 #   ./dc check quick   lint, type-check and unit tests (backend + frontend)
 #   ./dc check full    quick + production build + end-to-end smoke test on the running stack
-#   ./dc deploy        deploy the committed code (HEAD) to AWS and print its HTTPS link (deploy/aws-deploy.sh)
+#   ./dc deploy        deploy the committed code (HEAD) to AWS and print its changed pages' HTTPS links (deploy/aws-deploy.sh)
 #
 # Needs only Docker. Ports and the stack name default as in docker-compose.yml; a .env file
 # (see .env.example) may override them.

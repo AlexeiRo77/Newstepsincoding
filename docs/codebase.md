@@ -98,7 +98,9 @@ is not a production deployment; that is `deploy/` (below).
 ## Deployment
 
 `./dc deploy` runs `deploy/aws-deploy.sh`: it ships the committed code (HEAD) to one EC2 server and prints
-the public link, `https://<elastic-ip-with-dashes>.sslip.io/sky`. AWS credentials come from the environment
+the public link, `https://<elastic-ip-with-dashes>.sslip.io/`, plus the full link to every page changed since
+`DEPLOY_SINCE` (a commit; default `HEAD^`). `deploy/changed-pages.py` finds those pages: a route in
+`frontend/src/App.tsx` that is new, or whose `frontend/src/pages/` file changed. AWS credentials come from the environment
 or `Directory/Secrets/aws.env` ([Directory/Secrets/README.md](../Directory/Secrets/README.md)). It is
 idempotent — the first run creates everything, later runs update the same server — and its header lists
 the AWS resources it creates (all named `newstepsincoding-…`). Unlike the stack and the gates, it needs the AWS CLI v2, git, curl and
@@ -115,7 +117,8 @@ python3 on the machine it runs from.
   the Actions tab): `./dc check full`, then `./dc deploy` on a GitHub runner. Deploys queue, never overlap.
   It reads the repo secrets `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_DEFAULT_REGION` (Settings >
   Secrets and variables > Actions; same values as `Directory/Secrets/aws.env`). Until they are set, the deploy
-  step is skipped with a warning; the deployed link is printed in the run's summary.
+  step is skipped with a warning. The run's summary lists the full link to each page the push changed (the
+  workflow sets `DEPLOY_SINCE` to the commit before the push).
 
 ## Conventions
 
