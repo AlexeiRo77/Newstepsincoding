@@ -169,13 +169,15 @@ for _ in $(seq 30); do
   sleep 10
 done
 curl -fsS "https://$SITE_HOST/api/health" >/dev/null || { say "https://$SITE_HOST/api/health does not answer"; exit 1; }
-# Markdown, so the GitHub run summary shows the links as a list.
+# Markdown, so the GitHub run summary shows the links as a list. If the page list cannot be worked out,
+# say why on stderr and link the site root.
 SINCE="${DEPLOY_SINCE:-}"
 git cat-file -e "$SINCE^{commit}" 2>/dev/null || SINCE=HEAD^
-PAGES="$(python3 deploy/changed-pages.py "$SINCE" 2>/dev/null || true)"
+PAGES="$(python3 deploy/changed-pages.py "$SINCE")" || { say "could not list the changed pages"; PAGES=""; }
 if [ -n "$PAGES" ]; then
-  echo "Deployed $SHA: https://$SITE_HOST/ — pages changed since $(git rev-parse --short "$SINCE"):"
+  echo "Deployed $SHA — pages changed since $(git rev-parse --short "$SINCE"):"
   for page in $PAGES; do echo "- https://$SITE_HOST$page"; done
 else
-  echo "Deployed $SHA: https://$SITE_HOST/ (no page changed since $(git rev-parse --short "$SINCE" 2>/dev/null || echo "$SINCE"))"
+  echo "Deployed $SHA — no page changed since $(git rev-parse --short "$SINCE" 2>/dev/null || echo "$SINCE"):"
+  echo "- https://$SITE_HOST/"
 fi

@@ -118,7 +118,7 @@ python3 on the machine it runs from.
   It reads the repo secrets `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_DEFAULT_REGION` (Settings >
   Secrets and variables > Actions; same values as `Directory/Secrets/aws.env`). Until they are set, the deploy
   step is skipped with a warning. The run's summary lists the full link to each page the push changed (the
-workflow sets `DEPLOY_SINCE` to the commit before the push).
+  workflow sets `DEPLOY_SINCE` to the commit before the push).
 
 ## Conventions
 

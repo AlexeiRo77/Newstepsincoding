@@ -44,4 +44,5 @@ jobs:
             echo "::warning::Not deployed: repo secrets AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY are not set (see docs/codebase.md#deployment)"
             exit 0
           fi
+          set -o pipefail # a failed deploy must fail the job, not hide behind tee
           ./dc deploy | tee -a "$GITHUB_STEP_SUMMARY"
