@@ -55,7 +55,7 @@ button:disabled { opacity: 0.6; cursor: default; }
   background: var(--card);
   border-bottom: 1px solid var(--border);
 }
-.topbar nav { display: flex; gap: 12px; flex: 1; }
+.topbar nav { display: flex; flex-wrap: wrap; gap: 4px 12px; flex: 1; }
 .topbar nav a { text-decoration: none; }
 .topbar nav a.active { font-weight: 600; text-decoration: underline; }
 
@@ -188,4 +188,45 @@ dd { margin: 0; overflow-wrap: anywhere; }
   .skb-match td { display: grid; grid-template-columns: 6.5em 1fr; gap: 8px; padding: 2px 0; border: 0; }
   .skb-match td:last-child { min-width: 0; }
   .skb-match td::before { content: attr(data-label); color: var(--muted); font-weight: 600; }
+}
+
+.mae h3 { margin: 0 0 4px; font-size: 1.1rem; }
+.mae-facts div { grid-template-columns: 9em 1fr; }
+.mae-chart .mae-region text { font: 600 13px system-ui, sans-serif; fill: var(--muted); }
+.mae-narrow { display: none; }
+.mae-mark line { stroke: #c62828; stroke-width: 2; }
+.mae-mark text { font: 600 13px system-ui, sans-serif; fill: #c62828; }
+.mae-energy { fill: #6a1b9a; }
+.mae-fig text { font: 15px system-ui, sans-serif; fill: var(--fg); }
+.mae-fig .mae-head { font-weight: 700; font-size: 16px; fill: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+.mae-fig .mae-sign { fill: #fff; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+.mae-fig .mae-muted { fill: var(--muted); }
+.mae-fig .mae-e { fill: #1565c0; font-weight: 600; }
+.mae-fig .mae-p { fill: #c62828; font-weight: 600; }
+.mae-electron { fill: #1565c0; }
+.mae-positron { fill: #c62828; }
+.mae-nucleus { fill: #546e7a; }
+.mae-path { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.mae-photon { fill: none; stroke: #f9a825; stroke-width: 3; stroke-linejoin: round; }
+.mae-track { fill: none; stroke-width: 2.5; }
+.mae-electron-track { stroke: #1565c0; }
+.mae-positron-track { stroke: #c62828; }
+.mae-divider, .mae-level { stroke: var(--border); stroke-width: 1.5; }
+.mae-level { stroke: var(--muted); }
+.mae-sea { fill: #90caf9; }
+.mae-hole { fill: #fff; stroke: #c62828; stroke-width: 2.5; }
+.mae-lift { stroke: #1565c0; stroke-width: 2; stroke-dasharray: 5 4; }
+.mae-arrowhead { fill: #1565c0; }
+.mae-verdict-confirmed, .mae-verdict-current { background: #e8f5e9; color: #1b5e20; }
+.mae-verdict-ruled-out { background: #ffebee; color: #b71c1c; }
+.mae-verdict-superseded { background: #eceff1; color: #37474f; }
+.mae-verdict-open { background: #fff3e0; color: #e65100; }
+@media (max-width: 480px) {
+  .mae-chart .mae-region text, .mae-mark text { font-size: 22px; }
+  .mae-wide { display: none; }
+  .mae-narrow { display: inline; }
+  .mae-fig text { font-size: 24px; }
+  .mae-fig .mae-head { font-size: 24px; }
+  .mae-facts div { grid-template-columns: 1fr; gap: 0; padding: 4px 0; }
+  .mae .wave-badge { display: inline-block; margin: 4px 0 0; }
 }

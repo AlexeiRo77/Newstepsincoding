@@ -100,3 +100,11 @@ test('the brain-band emitters page is public: a signed-out visitor sees it', asy
   expect(screen.getByRole('link', { name: 'Brain-band emitters' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument()
 })
+
+test('the antimatter-versus-ether page is public: a signed-out visitor sees it', async () => {
+  mockBackend()
+  renderAt('/matter-ether')
+  expect(await screen.findByRole('heading', { name: 'Matter and antimatter versus the ether' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Antimatter × ether' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument()
+})
