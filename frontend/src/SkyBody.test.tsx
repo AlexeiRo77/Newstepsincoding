@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { afterEach, expect, test, vi } from 'vitest'
 import type { SkyData } from './pages/Sky'
-import SkyBody, { BIOPHOTONS, SKIN_EMITTED, illuminance, irradiance, sci, skyLight, times } from './pages/SkyBody'
+import SkyBody, { BIOPHOTONS, SKIN_EMITTED, SKIN_NET, illuminance, irradiance, sci, skyLight, times } from './pages/SkyBody'
 
 const body = { ra: 10, dec: 5, distance_km: 400000 }
 const SKY: SkyData = {
@@ -42,6 +42,8 @@ test('physics: sunlight scaling, skin glow and biophotons', () => {
   expect(BIOPHOTONS[0]).toBeCloseTo(3.97e-14, 15)
   expect(sci(0.00283)).toBe('2.8 × 10⁻³')
   expect(sci(492)).toBe('492')
+  expect(sci(9.97e-4)).toBe('1.0 × 10⁻³')
+  expect(SKIN_NET).toBeCloseTo(78, 0)
   expect(times(2.4e5)).toBe('about 10⁵ times')
 })
 

@@ -27,7 +27,8 @@ const SKY_BAND: [number, number] = [0.3e-6, 2.5e-6]
 // Skin at 33 °C (306 K), emissivity 0.98: the heat glow per square metre, peaking at Wien's 2898 µm·K / T.
 const SKIN_K = 306
 export const SKIN_EMITTED = 0.98 * SIGMA * SKIN_K ** 4
-const SKIN_NET = 100 // in a 20 °C room, after the heat the skin takes back in
+// In a 20 °C room, after the heat the skin takes back in from the walls.
+export const SKIN_NET = 0.98 * SIGMA * (SKIN_K ** 4 - 293 ** 4)
 
 // Biophotons: about 10–1000 photons per second per cm², around 500 nm.
 const photonsToWatts = (perCm2: number) => perCm2 * 1e4 * ((H_PLANCK * C) / 500e-9)
@@ -57,8 +58,9 @@ const pow10 = (e: number) => `10${[...String(e)].map((c) => SUP[c]).join('')}`
 // 0.00283 → "2.8 × 10⁻³"; numbers between 0.1 and 1000 stay plain.
 export function sci(x: number): string {
   if (x >= 0.1 && x < 1000) return x >= 10 ? x.toFixed(0) : x.toPrecision(2)
-  const e = Math.floor(Math.log10(x))
-  const m = x / 10 ** e
+  let e = Math.floor(Math.log10(x))
+  let m = Number((x / 10 ** e).toFixed(1))
+  if (m >= 10) [m, e] = [m / 10, e + 1]
   return `${m.toFixed(1)} × ${pow10(e)}`
 }
 
@@ -225,7 +227,7 @@ export default function SkyBody() {
       </ol>
       <p className="muted small">
         Not on the chart: the ECG (5) and EEG (6) beat at 0.5–100 Hz, wavelengths of 3,000–600,000 km — a
-        trillion (10¹²) times longer than the chart’s light, or more. Their fields stay near the body (a near field) and
+        trillion (10¹²) times longer than the sky’s light (0.3–2.5 µm), or more. Their fields stay near the body (a near field) and
         carry away no radiated power.
       </p>
 
@@ -288,7 +290,7 @@ export default function SkyBody() {
               <td data-label="Body wave">3 · Infrared heat</td>
               <td data-label="Band">3–50 µm, peak {(2898 / SKIN_K).toFixed(1)} µm</td>
               <td data-label="Power, W/m²">
-                {sci(SKIN_EMITTED)} given off ({SKIN_NET} net)
+                {sci(SKIN_EMITTED)} given off ({sci(SKIN_NET)} net)
               </td>
               <td data-label="Match">
                 <span>
