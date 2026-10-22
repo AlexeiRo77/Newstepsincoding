@@ -1,6 +1,7 @@
 # Auto deploy: every merge into develop runs the full gate, then `./dc deploy` (deploy/aws-deploy.sh).
 # Needs the repo secrets AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_DEFAULT_REGION — see
 # docs/codebase.md#deployment. Without them the gate still runs and the deploy step is skipped with a warning.
+# The run summary lists the full link to every page the push changed.
 name: deploy
 
 on:
@@ -32,8 +33,11 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+      DEPLOY_SINCE: ${{ github.event.before }} # the develop tip before this push; empty on a manual run
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # the history back to DEPLOY_SINCE, to find the changed pages
       - name: Deploy to AWS
         run: |
           if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then

@@ -6,7 +6,8 @@
 # What it creates (all named "newstepsincoding-…", in AWS_DEFAULT_REGION, default us-east-2):
 #   IAM role + instance profile (SSM only) · security group (80/443) · Ubuntu 24.04 t3.small EC2 server ·
 #   Elastic IP · private S3 bucket for code bundles. No SSH: commands run through AWS Systems Manager.
-# The link is https://<elastic-ip-with-dashes>.sslip.io; Caddy on the server gets its certificate.
+# The link is https://<elastic-ip-with-dashes>.sslip.io; Caddy on the server gets its certificate. It also prints
+# the full link to every page changed since DEPLOY_SINCE (a commit; default HEAD^, see deploy/changed-pages.py).
 set -euo pipefail
 for tool in aws git curl python3; do
   command -v "$tool" >/dev/null || { echo "deploy: needs '$tool' (AWS CLI v2, git, curl, python3) on this machine" >&2; exit 2; }
@@ -168,4 +169,13 @@ for _ in $(seq 30); do
   sleep 10
 done
 curl -fsS "https://$SITE_HOST/api/health" >/dev/null || { say "https://$SITE_HOST/api/health does not answer"; exit 1; }
-echo "Deployed $SHA: https://$SITE_HOST/sky"
+# Markdown, so the GitHub run summary shows the links as a list.
+SINCE="${DEPLOY_SINCE:-}"
+git cat-file -e "$SINCE^{commit}" 2>/dev/null || SINCE=HEAD^
+PAGES="$(python3 deploy/changed-pages.py "$SINCE" 2>/dev/null || true)"
+if [ -n "$PAGES" ]; then
+  echo "Deployed $SHA: https://$SITE_HOST/ — pages changed since $(git rev-parse --short "$SINCE"):"
+  for page in $PAGES; do echo "- https://$SITE_HOST$page"; done
+else
+  echo "Deployed $SHA: https://$SITE_HOST/ (no page changed since $(git rev-parse --short "$SINCE" 2>/dev/null || echo "$SINCE"))"
+fi
