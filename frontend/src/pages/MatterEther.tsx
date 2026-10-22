@@ -23,8 +23,8 @@ export const wienPeakHz = (t: number) => WIEN_HZ_PER_K * t
 // for an arm of optical length L and light of wavelength λ — ΔN = 2Lv²/(λc²).
 export const expectedFringeShift = (l: number, v: number, lambda: number) => (2 * l * v ** 2) / (lambda * C ** 2)
 
-// The 1887 run: 11 m folded arms, Earth's orbital speed, yellow light; seen: under 0.02 fringe.
-const MM_SHIFT = expectedFringeShift(11, 30e3, 500e-9)
+// The 1887 run: 11 m folded arms, Earth's orbital speed, sodium light (589 nm); seen: under 0.02 fringe.
+const MM_SHIFT = expectedFringeShift(11, 30e3, 589e-9)
 
 type Verdict = 'confirmed' | 'ruled-out' | 'superseded' | 'current' | 'open'
 
@@ -62,11 +62,11 @@ const ETHERS: Ether[] = [
   {
     id: 'dirac',
     title: 'Dirac’s sea and Dirac’s aether',
-    idea: 'Dirac’s 1928 equation for the electron also had negative-energy solutions. In 1930 he proposed that empty space is a sea in which every negative-energy state is already filled; a missing electron — a hole — would act as a particle of opposite charge. In 1951 he argued that quantum theory allows an aether whose velocity is uncertain, so it marks no preferred direction.',
-    when: 'Dirac (1928, 1930, 1951)',
+    idea: 'Dirac’s 1928 equation for the electron also had negative-energy solutions. In 1930 he proposed that empty space is a sea in which every negative-energy state is already filled; a missing electron — a hole — would act as a particle of opposite charge. He first took the holes to be protons; in 1931 he predicted instead an anti-electron with the electron’s mass. Separately, in 1951, he argued that quantum theory allows an aether whose velocity is uncertain, so it marks no preferred direction — an idea that was never tested or taken up.',
+    when: 'Dirac (1928, 1930, 1931; the aether paper 1951)',
     light: 'the same electromagnetic field as in Maxwell’s theory; photons with at least 2mc² can lift an electron out of the sea',
     antimatter:
-      'predicted: a hole in the sea is the positron; lifting an electron out makes a pair, an electron falling into a hole annihilates it',
+      'predicted by the sea (1931): a hole is the positron; lifting an electron out makes a pair, an electron falling into a hole annihilates it',
     evidence:
       'The positron was found in 1932, with the mass and charge Dirac’s theory required. The sea itself was dropped: it implies an infinite charge and mass in every cubic centimetre, and it cannot work for particles such as the pion, which have antiparticles but no exclusion rule that would let a sea fill up.',
     verdict: 'superseded',
@@ -80,7 +80,7 @@ const ETHERS: Ether[] = [
     antimatter:
       'built in: each field has particles and antiparticles, treated alike, with no sea of filled states',
     evidence:
-      'The vacuum’s fluctuations have measurable effects: the Lamb shift in hydrogen (1947), the electron’s magnetic moment (agreeing with theory to about 1 part in 10¹²) and the Casimir force between close metal plates (measured 1997). The vacuum looks the same to every observer, however they move, so it has no “wind” and is not an ether in the 19th-century sense.',
+      'The vacuum’s fluctuations have measurable effects: the Lamb shift in hydrogen (1947), the electron’s magnetic moment (agreeing with theory to about 1 part in 10¹²) and the Casimir force between close metal plates (measured 1997, usually explained by the fluctuations). The vacuum looks the same to every observer moving at steady speed, so it has no “wind” and is not an ether in the 19th-century sense.',
     verdict: 'current',
   },
 ]
@@ -114,7 +114,7 @@ const TOPICS: Topic[] = [
   {
     id: 'annihilation',
     title: 'Annihilation and pair production',
-    matter: `An electron and a positron at rest annihilate into two gamma photons of ${(ELECTRON_EV / 1e3).toFixed(0)} keV each, flying apart back to back (E = mc²). A photon of at least ${((2 * ELECTRON_EV) / 1e6).toFixed(3)} MeV passing a nucleus can turn into an electron–positron pair.`,
+    matter: `An electron and a positron at rest usually annihilate into two gamma photons of ${(ELECTRON_EV / 1e3).toFixed(0)} keV each, flying apart back to back (E = mc²). A photon of at least ${((2 * ELECTRON_EV) / 1e6).toFixed(3)} MeV passing a nucleus can turn into an electron–positron pair.`,
     ether:
       'The classical ether has nothing to say: in it matter never becomes radiation. Dirac’s sea explains both processes and gives the same numbers — pair production lifts an electron out of the sea across a gap of 2mc², annihilation is an electron dropping into a hole.',
     test: 'Anderson saw the positron’s track in a cloud chamber in 1932; Blackett and Occhialini photographed pairs in 1933. Hospital PET scanners detect the back-to-back 511 keV photons every day, and the INTEGRAL satellite sees the same line from the centre of the Galaxy — about 10⁴³ annihilations a second.',
@@ -127,7 +127,7 @@ const TOPICS: Topic[] = [
     id: 'spectrum',
     title: 'The electromagnetic spectrum',
     matter:
-      'Radio waves, light, X-rays and gamma rays are the same field oscillating at different frequencies; each comes in photons of energy E = hf. Moving charges make radio and heat, electrons jumping between atomic levels make light and X-rays, and nuclei and annihilating pairs make gamma rays.',
+      'Radio waves, light, X-rays and gamma rays are the same field oscillating at different frequencies; each comes in photons of energy E = hf. Accelerating charges make radio and heat, electrons jumping between atomic levels make light and X-rays (fast electrons braking in matter make X-rays too), and nuclei and annihilating pairs make gamma rays.',
     ether:
       'Maxwell explained light as an electromagnetic wave in the ether, and Hertz made radio waves in 1887 — both seen as ether vibrations of different lengths. This was the ether’s great success. But a smooth ether wave cannot explain why light knocks out electrons only above a certain frequency.',
     test: 'Planck’s black-body law (1900) and Einstein’s photoelectric law (1905, confirmed by Millikan 1914–16) need energy in packets of hf. Radio, light and gamma rays all travel at the same c in vacuum.',
@@ -139,7 +139,7 @@ const TOPICS: Topic[] = [
   {
     id: 'cosmic',
     title: 'The cosmic background and the missing antimatter',
-    matter: `The early universe made matter and antimatter in almost equal amounts — about one extra matter particle for every billion pairs. The pairs annihilated into light, which has since cooled into the cosmic microwave background (CMB) at ${CMB_K} K, brightest near ${(wienPeakHz(CMB_K) / 1e9).toFixed(0)} GHz. Why there was any excess at all is unsolved: the matter–antimatter difference measured since 1964 is far too small.`,
+    matter: `The early universe made matter and antimatter in almost equal amounts — about one extra matter particle for every billion pairs. The pairs annihilated, adding their energy to the hot radiation that filled space; released about 380,000 years later, that radiation has since cooled into the cosmic microwave background (CMB) at ${CMB_K} K, brightest near ${(wienPeakHz(CMB_K) / 1e9).toFixed(0)} GHz. Why there was any excess at all is unsolved: the matter–antimatter difference measured since 1964 is far too small.`,
     ether:
       'No ether theory predicted the CMB; Alpher and Herman predicted it from the Big Bang in 1948. The CMB does define a rest frame — we move through it at about 370 km/s, so it looks slightly warmer ahead — but it is radiation in space, not a medium for light, and measuring it does not change c.',
     test: 'Penzias and Wilson found the CMB in 1965; COBE (1990) measured a near-perfect black body. No gamma glow from matter–antimatter boundaries is seen, so there are no large antimatter regions in the observable universe.',
