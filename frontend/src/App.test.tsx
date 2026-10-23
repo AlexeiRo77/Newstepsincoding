@@ -108,3 +108,11 @@ test('the antimatter-versus-ether page is public: a signed-out visitor sees it',
   expect(screen.getByRole('link', { name: 'Antimatter × ether' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument()
 })
+
+test('the tumor-vibrations page is public: a signed-out visitor sees it', async () => {
+  mockBackend()
+  renderAt('/tumor-waves')
+  expect(await screen.findByRole('heading', { name: 'Tumor vibrations in Garyaev’s wave genetics' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Tumor vibrations' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument()
+})
