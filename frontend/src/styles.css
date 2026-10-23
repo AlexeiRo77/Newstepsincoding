@@ -232,8 +232,8 @@ dd { margin: 0; overflow-wrap: anywhere; }
 }
 
 .spec-curve { stroke-width: 1.8; }
-.finding h3 { margin: 0 0 4px; font-size: 1.1rem; }
-.badge-measured { background: #e8f5e9; color: #1b5e20; }
+.spec-finding h3 { margin: 0 0 4px; font-size: 1.1rem; }
+.spec-measured { background: #e8f5e9; color: #1b5e20; }
 .spec-swatch { display: inline-block; width: 1.4em; height: 4px; margin-right: 6px; border-radius: 2px; vertical-align: middle; }
 .spec-readings { width: 100%; margin: 16px 0 0; border-collapse: collapse; font-size: 0.9rem; }
 .spec-readings caption { text-align: left; font-weight: 600; padding-bottom: 4px; }
@@ -243,7 +243,7 @@ dd { margin: 0; overflow-wrap: anywhere; }
 .spec-readings td:not(:last-child) { white-space: nowrap; }
 @media (max-width: 480px) {
   .spec-curve { stroke-width: 3; }
-  .finding .wave-badge { display: inline-block; margin: 4px 0 0; }
+  .spec-finding .wave-badge { display: inline-block; margin: 4px 0 0; }
   .spec-readings thead { display: none; }
   .spec-readings tr { display: block; padding: 6px 0; border-bottom: 1px solid var(--border); }
   .spec-readings th, .spec-readings td { display: grid; grid-template-columns: 6.5em 1fr; gap: 8px; padding: 2px 0; border: 0; }

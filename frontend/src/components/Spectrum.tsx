@@ -223,11 +223,11 @@ export interface Finding {
 // The cards of what research has actually measured, set beside each page's model.
 export function MeasuredCards({ findings }: { findings: Finding[] }) {
   return findings.map((f) => (
-    <figure key={f.id} className="wave finding" id={f.id}>
+    <figure key={f.id} className="wave spec-finding" id={f.id}>
       <figcaption>
         <h3>
           {f.title}
-          <span className="wave-badge badge-measured">Measured</span>
+          <span className="wave-badge spec-measured">Measured</span>
         </h3>
         <p>{f.text}</p>
       </figcaption>

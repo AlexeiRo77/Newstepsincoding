@@ -23,7 +23,7 @@ import {
 
 // The aged thymus: most of its space turned to fat, which does not take part; what tissue is left vibrates
 // at AGED_AMP of the young amplitude, its phase wandering and with noise on top.
-export const AGED_FAT = 0.65
+export const AGED_FAT = 0.85
 export const AGED_AMP = 0.3
 const AGED_JITTER = 0.08 // incoherent displacement per map cell, in units of the young peak
 const YOUNG = { seed: 5, noise: 0.002 }
@@ -52,7 +52,8 @@ function locate(x: number, y: number) {
 }
 
 // The young displacement at one instant: mode k has k antinodes along the lobe and one across it, with the
-// harmonic's amplitude and phase from the model signal, so the map and the spectrum are the same vibration.
+// harmonic's amplitude and phase from the model signal, so the young map and its spectrum are the same
+// vibration. The aged map shows its weakness and loss of step as amplitude and per-cell jitter.
 const mode = (eta: number, xi: number) =>
   Math.cos((Math.PI * xi) / 2) *
   HARMONIC_KS.reduce((s, k) => s + harmonicAmp(k) * Math.cos(harmonicPhase(k)) * Math.sin(k * Math.PI * eta), 0)
@@ -186,7 +187,7 @@ function OrganMaps() {
           </div>
         ))}
       </div>
-      <ul className="skb-legend thy-legend">
+      <ul className="skb-legend">
         <li>
           <span className="thy-ramp" aria-hidden="true" />
           moving in · still · moving out
@@ -213,7 +214,7 @@ function Readings() {
       rows={[
         ['Main line strength', [strength(s.young), strength(s.aged)], 'power of the strongest line, against the young thymus'],
         ['Main line at', [`${fixed(y.peak)} f₀`, `${fixed(a.peak)} f₀`], 'where the strongest vibration sits'],
-        ['Line width', [`${fixed(y.linewidth, 3)} f₀`, `${fixed(a.linewidth, 3)} f₀`], 'how long the vibration stays in step (young: the resolution limit, f₀/64)'],
+        ['Line width', [`${fixed(y.linewidth, 3)} f₀`, `${fixed(a.linewidth, 3)} f₀`], 'how long the vibration stays in step (young: the window’s resolution limit, about f₀/48)'],
         ['Noise floor', [`${Math.round(y.floorDb)} dB`, `${Math.round(a.floorDb)} dB`], 'median power across the band, below its own main line'],
         ['Disorder (spectral entropy)', [fixed(y.entropy), fixed(a.entropy)], '0 = one pure tone, 1 = white noise'],
       ]}
@@ -291,8 +292,8 @@ export default function ThymusWaves() {
           </h2>
           <p>
             Young, in the theory’s terms, is a coherent vibration: sharp lines at f₀ and its harmonics, far above a
-            quiet floor. Aged is weaker and garbled: the same lines about {Math.round(-toDb(AGED_AMP ** 2))} dB
-            lower, their phase wandering so each line smears out (the higher harmonics most), over a floor of
+            quiet floor. Aged is weaker and garbled: the same lines {Math.round(-toDb(Math.max(...model().aged.slice(1))))} dB
+            lower and more, their phase wandering so each line smears out (the higher harmonics most), over a floor of
             noise.
           </p>
         </figcaption>

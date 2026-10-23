@@ -7,7 +7,8 @@ import { decode, type Finding, harmonicSignal, MeasuredCards, N, ReadingsTable, 
 
 // Tumor: every line drawn 7% low, its phase wandering at random (each harmonic k times faster), on a floor
 // of broadband noise. These values are this page's illustrative choices; the theory gives none. σ (sigma)
-// sets the fundamental's linewidth: Lorentzian FWHM = σ²·16/(2π) ≈ 0.06 f₀, widened by the Hann window.
+// sets the fundamental's linewidth: Lorentzian FWHM = σ²·FS/(2π) ≈ 0.06 f₀ (FS = 16, in Spectrum.tsx),
+// widened by the Hann window.
 export const TUMOR_SHIFT = 0.93
 const TUMOR = { seed: 7, shift: TUMOR_SHIFT, sigma: 0.155, noise: 0.25 }
 const HEALTHY = { seed: 3, noise: 0.002 }
@@ -35,7 +36,7 @@ function Readings() {
       columns={['Healthy', 'Tumor']}
       rows={[
         ['Main line at', [`${fixed(h.peak)} f₀`, `${fixed(t.peak)} f₀`], 'where the strongest vibration sits'],
-        ['Line width', [`${fixed(h.linewidth, 3)} f₀`, `${fixed(t.linewidth, 3)} f₀`], 'how long the vibration stays in step (healthy: the resolution limit, f₀/64)'],
+        ['Line width', [`${fixed(h.linewidth, 3)} f₀`, `${fixed(t.linewidth, 3)} f₀`], 'how long the vibration stays in step (healthy: the window’s resolution limit, about f₀/48)'],
         ['Noise floor', [`${Math.round(h.floorDb)} dB`, `${Math.round(t.floorDb)} dB`], 'median power across the band'],
         ['Disorder (spectral entropy)', [fixed(h.entropy), fixed(t.entropy)], '0 = one pure tone, 1 = white noise'],
       ]}
