@@ -116,3 +116,11 @@ test('the tumor-vibrations page is public: a signed-out visitor sees it', async 
   expect(screen.getByRole('link', { name: 'Tumor vibrations' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument()
 })
+
+test('the thymus-vibrations page is public: a signed-out visitor sees it', async () => {
+  mockBackend()
+  renderAt('/thymus-waves')
+  expect(await screen.findByRole('heading', { name: 'Thymus vibrations in Garyaev’s wave genetics' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Thymus vibrations' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument()
+})

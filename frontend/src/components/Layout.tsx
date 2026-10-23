@@ -34,6 +34,7 @@ export default function Layout() {
           <NavLink to="/brain-emitters">Brain-band emitters</NavLink>
           <NavLink to="/matter-ether">Antimatter × ether</NavLink>
           <NavLink to="/tumor-waves">Tumor vibrations</NavLink>
+          <NavLink to="/thymus-waves">Thymus vibrations</NavLink>
         </nav>
         {user && (
           <>
