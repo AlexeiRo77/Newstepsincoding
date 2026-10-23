@@ -2,7 +2,7 @@
 
 A starter web app: a **FastAPI** backend, a **React + TypeScript** frontend and a **Postgres** database,
 with sign-up, login and logout already working and two placeholder pages (Home, Profile) behind the login.
-The 1977 sky light matrix (`/sky`, compared with the body's radiation on `/sky-body`) and the waves drawings (`/waves`, `/body-waves`, `/sound-em`, `/brain-emitters`) the antimatter-versus-ether comparison (`/matter-ether`) and the tumor-vibration spectra of Garyaev's hypothesis (`/tumor-waves`) are public.
+The 1977 sky light matrix (`/sky`, compared with the body's radiation on `/sky-body`) and the waves drawings (`/waves`, `/body-waves`, `/sound-em`, `/brain-emitters`), the antimatter-versus-ether comparison (`/matter-ether`) and the tumor-vibration spectra of Garyaev's hypothesis (`/tumor-waves`) are public.
 
 ## Getting started
 

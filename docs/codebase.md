@@ -32,6 +32,7 @@ the base to build them on. The login/logout design is a trimmed copy of the one 
 | `frontend/src/pages/SoundEm.tsx` | Sound that makes EM waves: sonoluminescence, piezoelectric and seismoelectric effects, each as sound and EM traces on one time axis plus a chart of EM output vs sound amplitude (frontend only) |
 | `frontend/src/pages/BrainEmitters.tsx` | EM fields at the brain's frequencies (0.5–100 Hz): one log-log chart of field vs frequency against the EEG bands and the ICNIRP limit, then a card per emitter with its numbers and what studies say about effects (frontend only) |
 | `frontend/src/pages/MatterEther.tsx` | Matter/antimatter against the ether: three ether theories (classical, Dirac's sea, quantum vacuum), a spectrum strip with the 511 keV line, pair threshold and CMB peak, annihilation/pair/Dirac-sea drawings, and four comparison cards with what experiments decided (frontend only) |
+| `frontend/src/pages/TumorWaves.tsx` | Garyaev's tumor-vibration hypothesis as a model: healthy and tumor signals built from seeded noise, decoded by a Welch-averaged DFT into one spectrum chart and a readings table, then three cards of what has been measured about tumors (frontend only) |
 | `frontend/src/components/WavePanel.tsx` | The captioned wave panel and path helper both wave pages draw with |
 | `frontend/src/pages/`, `frontend/src/components/` | Pages and the shared layout, form and login guard |
 | `frontend/src/styles.css` | All styling (plain CSS, no framework) |

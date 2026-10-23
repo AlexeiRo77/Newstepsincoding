@@ -232,14 +232,18 @@ dd { margin: 0; overflow-wrap: anywhere; }
 }
 
 .tw-curve { stroke-width: 1.8; }
+.tw-finding h3 { margin: 0 0 4px; font-size: 1.1rem; }
+.tw-measured { background: #e8f5e9; color: #1b5e20; }
 .tw-swatch { display: inline-block; width: 1.4em; height: 4px; margin-right: 6px; border-radius: 2px; vertical-align: middle; }
 .tw-readings { width: 100%; margin: 16px 0 0; border-collapse: collapse; font-size: 0.9rem; }
 .tw-readings caption { text-align: left; font-weight: 600; padding-bottom: 4px; }
 .tw-readings th, .tw-readings td { padding: 4px 8px 4px 0; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
 .tw-readings thead th { color: var(--muted); }
 .tw-readings td:last-child { color: var(--muted); }
+.tw-readings td:not(:last-child) { white-space: nowrap; }
 @media (max-width: 480px) {
   .tw-curve { stroke-width: 3; }
+  .tw-finding .wave-badge { display: inline-block; margin: 4px 0 0; }
   .tw-readings thead { display: none; }
   .tw-readings tr { display: block; padding: 6px 0; border-bottom: 1px solid var(--border); }
   .tw-readings th, .tw-readings td { display: grid; grid-template-columns: 6.5em 1fr; gap: 8px; padding: 2px 0; border: 0; }

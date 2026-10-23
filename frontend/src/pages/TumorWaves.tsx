@@ -14,7 +14,8 @@ const BINS = (F_MAX * SEG) / FS
 const HARMONICS = 5
 
 // Tumor: every line drawn 7% low, its phase wandering at random (each harmonic k times faster), on a floor
-// of broadband noise. TUMOR_SIGMA sets the fundamental's linewidth: Lorentzian FWHM = σ²·FS/π ≈ 0.12 f₀.
+// of broadband noise. These values are this page's illustrative choices; the theory gives none. TUMOR_SIGMA
+// sets the fundamental's linewidth: Lorentzian FWHM = σ²·FS/(2π) ≈ 0.06 f₀, widened by the Hann window.
 export const TUMOR_SHIFT = 0.93
 const TUMOR_SIGMA = 0.155
 const TUMOR_NOISE = 0.25
@@ -89,20 +90,21 @@ export interface Reading {
 export function read(power: number[]): Reading {
   const p = power.slice(1) // drop the DC bin
   const top = p.indexOf(Math.max(...p))
+  const half = p[top] / 2
   let lo = top
   let hi = top
-  while (lo > 0 && p[lo - 1] >= 0.5) lo--
-  while (hi < p.length - 1 && p[hi + 1] >= 0.5) hi++
+  while (lo > 0 && p[lo - 1] >= half) lo--
+  while (hi < p.length - 1 && p[hi + 1] >= half) hi++
   // Interpolate where each flank crosses half power.
-  const left = lo > 0 ? lo - (p[lo] - 0.5) / (p[lo] - p[lo - 1]) : lo
-  const right = hi < p.length - 1 ? hi + (p[hi] - 0.5) / (p[hi] - p[hi + 1]) : hi
+  const left = lo > 0 ? lo - (p[lo] - half) / (p[lo] - p[lo - 1]) : lo
+  const right = hi < p.length - 1 ? hi + (p[hi] - half) / (p[hi] - p[hi + 1]) : hi
   const sorted = [...p].sort((a, b) => a - b)
   const total = p.reduce((s, v) => s + v, 0)
   const entropy = -p.reduce((s, v) => (v > 0 ? s + (v / total) * Math.log(v / total) : s), 0) / Math.log(p.length)
   return {
     peak: binHz((left + right) / 2 + 1),
     linewidth: binHz(right - left),
-    floorDb: 10 * Math.log10(sorted[Math.floor(sorted.length / 2)]),
+    floorDb: 10 * Math.log10(sorted[Math.floor(sorted.length / 2)] / p[top]),
     entropy,
   }
 }
@@ -120,7 +122,7 @@ const PL = 56
 const PR = W - 12
 const PT = 12
 const PB = CH - 36
-const DB_MIN = -70
+const DB_MIN = -80
 export const sx = (f: number) => PL + (f / F_MAX) * (PR - PL)
 const sy = (db: number) => PT + (Math.min(0, Math.max(DB_MIN, db)) / DB_MIN) * (PB - PT)
 const toDb = (p: number) => 10 * Math.log10(Math.max(p, 1e-12))
@@ -147,7 +149,7 @@ function SpectrumChart() {
         role="img"
         aria-label="Decoded spectra: the healthy model shows sharp lines at f₀, 2f₀, 3f₀…; the tumor model shows lines shifted lower, broadened and sunk in a noise floor"
       >
-        {[0, -20, -40, -60].map((db) => (
+        {[0, -20, -40, -60, -80].map((db) => (
           <g key={db}>
             <line className="sem-grid" x1={PL} x2={PR} y1={sy(db)} y2={sy(db)} />
             <text className="sem-tick" x={PL - 8} y={sy(db)} textAnchor="end" dominantBaseline="middle">
@@ -184,7 +186,7 @@ function Readings() {
   const t = read(s.tumor)
   const rows: [string, string, string, string][] = [
     ['Main line at', `${fixed(h.peak)} f₀`, `${fixed(t.peak)} f₀`, 'where the strongest vibration sits'],
-    ['Line width', `${fixed(h.linewidth, 3)} f₀`, `${fixed(t.linewidth, 3)} f₀`, 'how long the vibration stays in step'],
+    ['Line width', `${fixed(h.linewidth, 3)} f₀`, `${fixed(t.linewidth, 3)} f₀`, 'how long the vibration stays in step (healthy: the resolution limit, f₀/64)'],
     ['Noise floor', `${Math.round(h.floorDb)} dB`, `${Math.round(t.floorDb)} dB`, 'median power across the band'],
     ['Disorder (spectral entropy)', fixed(h.entropy), fixed(t.entropy), '0 = one pure tone, 1 = white noise'],
   ]
@@ -237,7 +239,7 @@ const FINDINGS: Finding[] = [
   {
     id: 'nanomotion',
     title: 'Living cells do move at audio frequencies',
-    text: 'The wall of a yeast cell was found to vibrate at about 0.8–1.6 kHz with a few nanometres’ amplitude, and the motion stopped when the cell was killed. Such “nanomotion” is now used in lab tests of whether bacteria survive an antibiotic. None of it carries genetic information, and no tumor “signature” in it has been established.',
+    text: 'The wall of a yeast cell was found to vibrate at about 0.8–1.6 kHz with a few nanometres’ amplitude, and the motion stopped when the cell was poisoned. Such “nanomotion” is being developed into lab tests of whether bacteria survive an antibiotic. None of it carries genetic information, and no tumor “signature” in it has been established.',
     source: 'Pelling et al., Science (2004); Longo et al., Nature Nanotechnology (2013)',
   },
 ]
@@ -266,9 +268,11 @@ export default function TumorWaves() {
             <span className="wave-badge">Hypothesis — not confirmed</span>
           </h2>
           <p>
-            Healthy, as the theory describes it: a coherent vibration — sharp lines at f₀ and its harmonics, standing
-            far above a quiet floor. Tumor: the same lines drawn {Math.round((1 - TUMOR_SHIFT) * 100)}% lower, their
-            phase wandering at random so each line smears out (the higher harmonics most), over a floor of noise.
+            Healthy, in the theory’s terms, is a coherent vibration: here, sharp lines at f₀ and its harmonics, standing
+            far above a quiet floor. Tumor is a garbled one: here, the same lines drawn{' '}
+            {Math.round((1 - TUMOR_SHIFT) * 100)}% lower, their phase wandering at random so each line smears out (the
+            higher harmonics most), over a floor of noise. The theory gives no shift, width or noise level — those
+            numbers are this page’s illustrative choices.
           </p>
         </figcaption>
         <SpectrumChart />
@@ -282,17 +286,17 @@ export default function TumorWaves() {
 
       <h2 className="wave-group">What has been measured</h2>
       <p className="muted">
-        No independent laboratory has reproduced Garyaev’s results, they were not published in mainstream
-        peer-reviewed journals, and members of the Russian Academy of Sciences’ commission against pseudoscience
+        No independent laboratory has reproduced Garyaev’s results; his core claims appeared mainly in books,
+        conference proceedings and minor journals, and members of the Russian Academy of Sciences’ commission against pseudoscience
         named wave genetics as pseudoscience. Tumors do differ physically from healthy tissue, though — in ways
         measured and published:
       </p>
       {FINDINGS.map((f) => (
-        <figure key={f.id} className="wave mae" id={f.id}>
+        <figure key={f.id} className="wave tw-finding" id={f.id}>
           <figcaption>
             <h3>
               {f.title}
-              <span className="wave-badge mae-verdict-confirmed">Measured</span>
+              <span className="wave-badge tw-measured">Measured</span>
             </h3>
             <p>{f.text}</p>
           </figcaption>
