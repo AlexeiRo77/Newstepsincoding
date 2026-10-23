@@ -11,6 +11,7 @@ import Signup from './pages/Signup'
 import SoundEm from './pages/SoundEm'
 import Sky from './pages/Sky'
 import SkyBody from './pages/SkyBody'
+import ThymusWaves from './pages/ThymusWaves'
 import TumorWaves from './pages/TumorWaves'
 import Waves from './pages/Waves'
 
@@ -29,6 +30,7 @@ export default function App() {
         <Route path="/brain-emitters" element={<BrainEmitters />} />
         <Route path="/matter-ether" element={<MatterEther />} />
         <Route path="/tumor-waves" element={<TumorWaves />} />
+        <Route path="/thymus-waves" element={<ThymusWaves />} />
       </Route>
       <Route element={<RequireAuth />}>
         <Route element={<Layout />}>
