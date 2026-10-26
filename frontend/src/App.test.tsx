@@ -124,3 +124,11 @@ test('the thymus-vibrations page is public: a signed-out visitor sees it', async
   expect(screen.getByRole('link', { name: 'Thymus vibrations' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument()
 })
+
+test('the light-pressure page is public: a signed-out visitor sees it', async () => {
+  mockBackend()
+  renderAt('/light-pressure')
+  expect(await screen.findByRole('heading', { name: 'Light pressure by source' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Light pressure' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument()
+})
