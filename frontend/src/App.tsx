@@ -4,6 +4,7 @@ import RequireAuth from './components/RequireAuth'
 import BodyWaves from './pages/BodyWaves'
 import BrainEmitters from './pages/BrainEmitters'
 import Home from './pages/Home'
+import LightPressure from './pages/LightPressure'
 import Login from './pages/Login'
 import MatterEther from './pages/MatterEther'
 import Profile from './pages/Profile'
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/matter-ether" element={<MatterEther />} />
         <Route path="/tumor-waves" element={<TumorWaves />} />
         <Route path="/thymus-waves" element={<ThymusWaves />} />
+        <Route path="/light-pressure" element={<LightPressure />} />
       </Route>
       <Route element={<RequireAuth />}>
         <Route element={<Layout />}>
