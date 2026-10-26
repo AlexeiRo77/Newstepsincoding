@@ -265,6 +265,7 @@ dd { margin: 0; overflow-wrap: anywhere; }
 .lp-view { display: grid; grid-template-columns: minmax(240px, 380px) 1fr; gap: 16px; align-items: start; }
 .lp-view h3 { margin: 0 0 4px; font-size: 1.1rem; }
 .lp-map { display: block; width: 100%; height: auto; }
+.lp-source { fill: #fff; stroke: #000; stroke-width: 1.5; }
 .lp-frame { fill: none; stroke: var(--muted); stroke-width: 1; }
 .lp-tick { font: 13px system-ui, sans-serif; fill: var(--muted); }
 .lp-ring circle { fill: none; stroke: #fff; stroke-opacity: 0.7; stroke-width: 1; stroke-dasharray: 4 4; }
@@ -280,7 +281,8 @@ dd { margin: 0; overflow-wrap: anywhere; }
 .lp-table caption { text-align: left; font-weight: 600; padding-bottom: 4px; }
 .lp-table th, .lp-table td { padding: 4px 8px 4px 0; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
 .lp-table thead th { color: var(--muted); }
-.lp-table tbody th { white-space: nowrap; }
+.lp-table td[data-label='Where'] { min-width: 7em; }
+.lp-table tbody th, .lp-table td:not([data-label='Where']) { white-space: nowrap; }
 @media (max-width: 720px) {
   .lp-view { grid-template-columns: 1fr; }
   .lp-map { max-width: 380px; margin: 0 auto; }
@@ -292,4 +294,6 @@ dd { margin: 0; overflow-wrap: anywhere; }
 }
 @media (max-width: 480px) {
   .lp-earth text { font-size: 24px; }
+  .lp-tick { font-size: 18px; }
+  .lp-ring text { font-size: 16px; }
 }

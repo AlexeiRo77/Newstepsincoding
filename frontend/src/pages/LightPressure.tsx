@@ -65,7 +65,7 @@ export const SOURCES: Source[] = [
     id: 'lamp',
     name: '100 W filament lamp',
     power: 90,
-    powerNote: 'about 90 W radiated, mostly infrared; under 5 W of it visible',
+    powerNote: 'roughly 90 W radiated, mostly infrared; under 5 W of it visible',
     shape: { kind: 'isotropic', radius: 0.03 },
     at: [1, '1 m away'],
     frame: { x0: -2, x1: 2, unit: [1, 'm'], ticks: [-2, -1, 0, 1, 2], rings: [[0.5, '0.5 m'], [1, '1 m'], [2, '2 m']] },
@@ -104,6 +104,7 @@ export const SOURCES: Source[] = [
 
 export type Surface = 'absorber' | 'mirror'
 export const surfaceFactor = (s: Surface) => (s === 'mirror' ? 2 : 1)
+const onSurface = (s: Surface) => (s === 'mirror' ? 'on a mirror' : 'on an absorber')
 
 // Beam radius at z: w0 √(1 + (z/zR)²).
 const beamRadius = (w0: number, theta: number, z: number) => w0 * Math.sqrt(1 + ((z * theta) / w0) ** 2)
@@ -129,19 +130,20 @@ export const totalForce = (s: Source, surface: Surface) => (surfaceFactor(surfac
 
 // Numbers as 4.5 × 10⁻⁶; plain under four digits.
 const SUP: Record<string, string> = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' }
+export const pow10 = (e: number) => `10${[...String(e)].map((c) => SUP[c]).join('')}`
 export function sci(v: number): string {
   if (v === 0) return '0'
-  const e = Math.floor(Math.log10(Math.abs(v)))
+  let e = Math.floor(Math.log10(Math.abs(v)))
   if (e >= -2 && e <= 3) return Number(v.toPrecision(2)).toLocaleString('en')
-  const m = v / 10 ** e
-  const ms = m.toFixed(1).replace(/\.0$/, '')
-  const pow = `10${[...String(e)].map((c) => SUP[c]).join('')}`
-  return ms === '1' ? pow : `${ms} × ${pow}`
+  let m = Number((v / 10 ** e).toFixed(1))
+  if (m >= 10) [m, e] = [m / 10, e + 1]
+  return m === 1 ? pow10(e) : `${m} × ${pow10(e)}`
 }
 
-// One colour scale for every map: a band per decade of pressure from 10⁻¹² to 10⁴ Pa (dark = little light).
+// One colour scale for every map: STEPS bands per decade of pressure from 10⁻¹² to 10⁵ Pa (dark = little light).
 export const LOG_MIN = -12
-export const LOG_MAX = 4
+export const LOG_MAX = 5
+const STEPS = 4
 const STOPS = [
   [0, 0, 4],
   [66, 10, 104],
@@ -156,14 +158,14 @@ function rampColor(t: number) {
   const u = f - i
   return `rgb(${STOPS[i].map((a, k) => Math.round(a + (STOPS[i + 1][k] - a) * u)).join(',')})`
 }
-const BANDS = LOG_MAX - LOG_MIN
-export const bandOf = (p: number) => Math.max(0, Math.min(BANDS - 1, Math.floor(Math.log10(p) - LOG_MIN)))
+const BANDS = (LOG_MAX - LOG_MIN) * STEPS
+export const bandOf = (p: number) => Math.max(0, Math.min(BANDS - 1, Math.floor((Math.log10(p) - LOG_MIN) * STEPS)))
 const bandColor = (b: number) => rampColor(b / (BANDS - 1))
-const RAMP_CSS = `linear-gradient(90deg, ${Array.from({ length: BANDS }, (_, b) => bandColor(b)).join(', ')})`
+const RAMP_CSS = `linear-gradient(90deg, ${Array.from({ length: 6 }, (_, i) => rampColor(i / 5)).join(', ')})`
 
-// The map: MAP_W × MAP_H viewBox units in square cells, grouped by colour into one path each.
+// The map: MAP × MAP viewBox units in square cells, grouped by colour into one path each.
 const MAP = 360
-const CELL = 4
+const CELL = 3
 
 export interface MapCell {
   x: number
@@ -193,28 +195,42 @@ function PressureMap({ s, surface }: { s: Source; surface: Surface }) {
     d.push(`M${c.x},${c.y}h${CELL}v${CELL}h-${CELL}z`)
     groups.set(fill, d)
   }
-  const { x0, x1, unit, ticks, rings } = s.frame
+  const { x0, x1, across, unit, ticks, rings } = s.frame
   const mx = (v: number) => ((v * unit[0] - x0) / (x1 - x0)) * MAP
-  const pad = 30
+  const pad = across ? 100 : 30
   return (
     <svg
       className="lp-map"
-      viewBox={`-${pad / 2} -4 ${MAP + pad} ${MAP + pad}`}
+      viewBox={`-${across ? pad - 14 : pad / 2} -4 ${MAP + pad} ${MAP + 34}`}
       role="img"
-      aria-label={`Light pressure around the ${s.name.replace(/^The /, '').toLowerCase()} on a ${surface}: bright where it pushes hardest`}
+      aria-label={`Light pressure around the ${s.name.replace(/^The /, '').toLowerCase()} ${onSurface(surface)}: bright where it pushes hardest`}
       data-map={s.id}
     >
       {[...groups].map(([fill, d]) => (
-        <path key={fill} d={d.join('')} fill={fill} />
+        <path key={fill} d={d.join('')} fill={fill} shapeRendering="crispEdges" />
       ))}
       {rings?.map(([r, label]) => (
         <g key={label} className="lp-ring">
           <circle cx={MAP / 2} cy={MAP / 2} r={mx(r) - MAP / 2} />
-          <text x={MAP / 2 + (mx(r) - MAP / 2) * 0.71 + 3} y={MAP / 2 - (mx(r) - MAP / 2) * 0.71 - 3}>
+          <text x={MAP / 2} y={MAP - mx(r) - 4} textAnchor="middle">
             {label}
           </text>
         </g>
       ))}
+      {s.shape.kind === 'isotropic' && <circle className="lp-source" cx={MAP / 2} cy={MAP / 2} r={4} />}
+      {across && (
+        <g className="lp-tick">
+          <text x={-4} y={4} textAnchor="end" dominantBaseline="hanging">
+            +{sci((across / 2) * 1e3)} mm
+          </text>
+          <text x={-4} y={MAP / 2} textAnchor="end" dominantBaseline="middle">
+            0
+          </text>
+          <text x={-4} y={MAP - 4} textAnchor="end">
+            −{sci((across / 2) * 1e3)} mm
+          </text>
+        </g>
+      )}
       <rect className="lp-frame" x={0} y={0} width={MAP} height={MAP} />
       {ticks.map((t) => (
         <text key={t} className="lp-tick" x={mx(t)} y={MAP + 6} textAnchor="middle" dominantBaseline="hanging">
@@ -243,18 +259,17 @@ const PB = 420
 const R_MIN = 1e-5
 const R_MAX = 1e13
 const P_MIN = 1e-14
-const P_MAX = 1e4
+const P_MAX = 1e5
 const cx = (r: number) => PL + (Math.log10(r / R_MIN) / Math.log10(R_MAX / R_MIN)) * (PR - PL)
 const cy = (p: number) => PB - (Math.log10(p / P_MIN) / Math.log10(P_MAX / P_MIN)) * (PB - PT)
 const R_TICKS: [number, string][] = [
-  [1e-5, '10 µm'],
   [1e-3, '1 mm'],
   [1, '1 m'],
   [1e3, '1 km'],
   [1e6, '1000 km'],
   [AU, '1 AU'],
 ]
-const P_TICKS = [-14, -10, -6, -2, 2].map((e) => 10 ** e)
+const P_EXPS = [-14, -10, -6, -2, 2, 5]
 
 // Along a beam's axis, or straight out from an isotropic source.
 export const onAxis = (s: Source, r: number, surface: Surface) => pressure(s, r, 0, surface)
@@ -276,18 +291,18 @@ function PressureChart({ surface }: { surface: Surface }) {
   const earth = onAxis(sun, AU, surface)
   return (
     <div className="sem-chart">
-      <p className="sem-axis-title">↑ Light pressure on a {surface}, Pa (log scale)</p>
+      <p className="sem-axis-title">↑ Light pressure {onSurface(surface)}, Pa (log scale)</p>
       <svg
         className="sem-plot"
         viewBox={`0 0 ${W} ${CH}`}
         role="img"
-        aria-label={`Light pressure against distance: one line per source, on a ${surface}`}
+        aria-label={`Light pressure against distance: one line per source, ${onSurface(surface)}`}
       >
-        {P_TICKS.map((t) => (
-          <g key={t}>
-            <line className="sem-grid" x1={PL} x2={PR} y1={cy(t)} y2={cy(t)} />
-            <text className="sem-tick" x={PL - 8} y={cy(t)} textAnchor="end" dominantBaseline="middle">
-              {sci(t)}
+        {P_EXPS.map((e) => (
+          <g key={e}>
+            <line className="sem-grid" x1={PL} x2={PR} y1={cy(10 ** e)} y2={cy(10 ** e)} />
+            <text className="sem-tick" x={PL - 8} y={cy(10 ** e)} textAnchor="end" dominantBaseline="middle">
+              {pow10(e)}
             </text>
           </g>
         ))}
@@ -302,7 +317,7 @@ function PressureChart({ surface }: { surface: Surface }) {
         ))}
         <g className="lp-earth">
           <circle cx={cx(AU)} cy={cy(earth)} r={6} />
-          <text x={cx(AU) - 10} y={cy(earth) - 10} textAnchor="end">
+          <text x={cx(AU) - 14} y={cy(earth)} textAnchor="end" dominantBaseline="middle">
             Earth
           </text>
         </g>
@@ -321,7 +336,7 @@ function PressureChart({ surface }: { surface: Surface }) {
 }
 
 function PressureTable() {
-  const cols = ['Light power', 'Where', 'Intensity', 'On an absorber', 'On a mirror', 'All light caught']
+  const cols = ['Light power', 'Where', 'Intensity', 'On an absorber', 'On a mirror', 'Whole push']
   return (
     <table className="lp-table">
       <caption>Light pressure of each source</caption>
@@ -344,7 +359,7 @@ function PressureTable() {
             `${sci(intensity(s, r, 0))} W/m²`,
             `${sci(pressure(s, r, 0, 'absorber'))} Pa`,
             `${sci(pressure(s, r, 0, 'mirror'))} Pa`,
-            `${sci(totalForce(s, 'absorber'))} N absorbed, ${sci(totalForce(s, 'mirror'))} N reflected`,
+            `${sci(totalForce(s, 'absorber'))} N`,
           ]
           return (
             <tr key={s.id} data-source={s.id}>
@@ -369,13 +384,13 @@ const FINDINGS: Finding[] = [
   {
     id: 'lebedev',
     title: 'Light pressure was first measured in 1900',
-    text: 'Pyotr Lebedev hung thin metal vanes, some blackened and some shiny, on a fine thread in a vacuum and shone an arc lamp on them. The vanes turned, the shiny ones about twice as hard — the I/c and 2I/c of Maxwell’s theory. Nichols and Hull confirmed it independently in 1901.',
+    text: 'Pyotr Lebedev hung thin metal vanes, some blackened and some shiny, on a fine thread in a vacuum and shone an arc lamp on them. The vanes turned, the shiny ones harder, by the pressure Maxwell’s theory predicts — I/c on black, 2I/c on a mirror — to within about 20%. Nichols and Hull confirmed it independently in 1901.',
     source: 'Lebedev, Annalen der Physik (1901); Nichols & Hull, Physical Review (1901)',
   },
   {
     id: 'ikaros',
     title: 'Sunlight sailed a spacecraft',
-    text: 'JAXA’s IKAROS unfurled a 14 m × 14 m sail of thin polyimide in 2010 on its way to Venus. Sunlight pushed it with about 1.1 mN — the 9 µPa of a mirror at the Earth on 196 m² — and the probe’s orbit changed as predicted. Comet dust tails, pushed away from the Sun, show the same force in nature.',
+    text: 'JAXA’s IKAROS unfurled a 14 m × 14 m sail of thin polyimide in 2010 on its way to Venus. Sunlight pushed it with about 1.1 mN — less than the 1.8 mN a perfect mirror facing the Sun would feel (9 µPa on 196 m²), as the sail reflects imperfectly and was tilted to the light — and the probe’s orbit changed as predicted. Comet dust tails, pushed away from the Sun, show the same force in nature.',
     source: 'Tsuda et al., Acta Astronautica (2011)',
   },
   {
@@ -409,7 +424,8 @@ export default function LightPressure() {
             Pick a source. Each point of the map is coloured by the pressure on a small {surface} facing the
             light there; all five maps share one colour scale, so a brighter map is a stronger push. A lamp or
             the Sun sends light every way, so its pressure falls as 1/r²; a laser keeps its light in a narrow
-            beam, which is why a 5 mW pointer pushes harder than a 100 W lamp.
+            beam, which is why a 5 mW pointer presses harder on the spot it lights than a 100 W lamp
+            does at the same distance — though the lamp’s whole push, spread over a whole room, is far larger.
           </p>
         </figcaption>
         <div className="lp-controls">
@@ -451,9 +467,10 @@ export default function LightPressure() {
             <p className="lp-legend">
               <span className="lp-ramp" style={{ background: RAMP_CSS }} aria-hidden="true" />
               <span className="lp-ramp-ticks">
-                <span>{sci(10 ** LOG_MIN)}</span>
-                <span>{sci(10 ** ((LOG_MIN + LOG_MAX) / 2))}</span>
-                <span>{sci(10 ** LOG_MAX)} Pa</span>
+                <span>{pow10(LOG_MIN)}</span>
+                <span>{pow10(-6)}</span>
+                <span>1</span>
+                <span>{pow10(LOG_MAX)} Pa</span>
               </span>
             </p>
           </div>
@@ -473,8 +490,8 @@ export default function LightPressure() {
         <PressureChart surface={surface} />
         <PressureTable />
         <p className="muted sem-note">
-          The last column is the whole push when every bit of the light is caught, P/c or 2P/c: it depends only
-          on the power, never on the distance. Pressure is that push spread over the area the light covers.
+          The last column is the whole push when every bit of the light is absorbed, P/c (twice that if it is
+          all reflected back): it depends only on the power, never on the distance. Pressure is that push spread over the area the light covers.
         </p>
       </figure>
 

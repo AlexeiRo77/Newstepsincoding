@@ -35,7 +35,7 @@ the base to build them on. The login/logout design is a trimmed copy of the one 
 | `frontend/src/pages/TumorWaves.tsx` | Garyaev's tumor-vibration hypothesis as a model: healthy and tumor signals built from seeded noise, decoded by a Welch-averaged DFT into one spectrum chart and a readings table, then three cards of what has been measured about tumors (frontend only) |
 | `frontend/src/pages/ThymusWaves.tsx` | The same hypothesis for the thymus, young against aged (fat-replaced): a 2D vibration map over the organ's two lobes, the decoded spectra and readings, then three cards of what has been measured about the thymus (frontend only) |
 | `frontend/src/pages/LightPressure.tsx` | Light pressure (I/c on an absorber, 2I/c on a mirror) of five real sources, laser pointer to the Sun: a 2D pressure map per source on one log colour scale, a log-log chart of pressure vs distance, a table of the numbers and three "Measured" cards (frontend only) |
-| `frontend/src/components/Spectrum.tsx` | What both Garyaev pages share: the seeded harmonic model signal, Welch decoding, the readings, the spectrum chart, the readings table and the "Measured" cards |
+| `frontend/src/components/Spectrum.tsx` | What both Garyaev pages share: the seeded harmonic model signal, Welch decoding, the readings, the spectrum chart and the readings table; also the "Measured" cards, which `/light-pressure` uses too |
 | `frontend/src/components/WavePanel.tsx` | The captioned wave panel and path helper both wave pages draw with |
 | `frontend/src/pages/`, `frontend/src/components/` | Pages and the shared layout, form and login guard |
 | `frontend/src/styles.css` | All styling (plain CSS, no framework) |
