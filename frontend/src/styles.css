@@ -297,3 +297,56 @@ dd { margin: 0; overflow-wrap: anywhere; }
   .lp-tick { font-size: 18px; }
   .lp-ring text { font-size: 16px; }
 }
+
+.ew-slider { display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 0.9rem; }
+.ew-slider span { color: var(--muted); font-weight: 600; }
+.ew-slider input { flex: 1 1 200px; max-width: 420px; padding: 0; accent-color: var(--accent); }
+.ew-slider output { min-width: 6em; font-weight: 600; }
+.ew-space { fill: #0d1b2a; }
+.ew-orbit-line { fill: none; stroke: #8fa3b8; stroke-width: 1; stroke-dasharray: 4 4; }
+.ew-axis line, .ew-axis path { fill: none; stroke: #8fa3b8; stroke-width: 1; }
+.ew-label { font: 12px system-ui, sans-serif; fill: var(--muted); }
+.ew-orbit .ew-label, .ew-month { font: 600 12px system-ui, sans-serif; fill: #c9d6e3; }
+.ew-sun { fill: #ffb300; }
+.ew-earth { fill: #42a5f5; stroke: #fff; stroke-width: 2; }
+.ew-earth-dot { fill: #8fa3b8; }
+.ew-wind line, .ew-wind path { fill: none; stroke: #4fc3f7; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.ew-wind-small line, .ew-wind-small path { fill: none; stroke: #4fc3f7; stroke-opacity: 0.55; stroke-width: 1.5; }
+.ew-wind-sun line, .ew-wind-sun path { fill: none; stroke: #ff9800; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.ew-season { stroke: #0288d1; }
+.ew-season-now, .ew-now { fill: #fff; stroke: #c62828; stroke-width: 2.5; }
+.ew-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 640px; }
+.ew-stream line, .ew-stream path { fill: none; stroke: #90caf9; stroke-width: 1.5; }
+.ew-slab { fill: #eceff1; fill-opacity: 0.8; stroke: #90a4ae; stroke-width: 1.5; }
+.ew-beam { stroke: #e53935; stroke-width: 2.5; }
+.ew-mirror { stroke: #37474f; stroke-width: 4; stroke-linecap: round; }
+.ew-splitter { stroke-width: 2.5; }
+.ew-lamp { fill: #ffb300; stroke: #37474f; stroke-width: 1.5; }
+.ew-ring { fill: none; stroke: var(--muted); stroke-width: 1; stroke-dasharray: 4 4; }
+.ew-polar-line { fill: #e3f2fd; fill-opacity: 0.6; stroke: #1565c0; stroke-width: 2.5; }
+.ew-muted { font-style: italic; }
+.ew-measured { fill: #c8e6c9; }
+.ew-expected { stroke: #1565c0; }
+.ew-claim { stroke: #ef6c00; stroke-dasharray: 8 6; }
+.ew-sw-expected { background: #1565c0; }
+.ew-sw-measured { background: #81c784; height: 10px; }
+.ew-sw-claim { background: #ef6c00; }
+.ew-streamline { fill: none; stroke: #fff; stroke-opacity: 0.75; stroke-width: 1.2; }
+.ew-globe { fill: #2e7d32; stroke: #fff; stroke-width: 2; }
+.ew-globe-open { fill: #2e7d32; fill-opacity: 0.35; }
+.ew-globe-label { font: 600 14px system-ui, sans-serif; fill: #fff; }
+.ew-point { cursor: pointer; }
+.ew-point-claim circle { fill: #ef6c00; stroke: #fff; stroke-width: 2; }
+.ew-point-limit path { fill: #2e7d32; }
+.ew-point-limit line { stroke: #2e7d32; stroke-width: 2; }
+.ew-point-on circle, .ew-point-on path { stroke: #000; stroke-width: 2; }
+.ew-key { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: middle; }
+.ew-key-claim { border-radius: 50%; background: #ef6c00; }
+.ew-key-limit { background: #2e7d32; clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.ew-detail { margin: 12px 0 0; padding: 12px; border: 1px solid var(--border); border-radius: 8px; }
+.ew-detail h3 { margin: 0; font-size: 1.05rem; }
+.ew-badge-claim { color: #fff; background: #ef6c00; }
+@media (max-width: 480px) {
+  .ew-pair { grid-template-columns: 1fr; }
+  .ew-orbit .ew-label, .ew-month { font-size: 14px; }
+}
