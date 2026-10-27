@@ -75,7 +75,7 @@ export const INSTRUMENTS: Instrument[] = [
 ]
 export const WINDS: [number, string][] = [
   [V_ORBIT, 'Orbital, 30 km/s'],
-  [V_CMB, 'Toward the CMB, 370 km/s'],
+  [V_CMB, 'Sun against the CMB, 370 km/s'],
   [10, 'Miller’s claim, 10 km/s'],
 ]
 
@@ -94,7 +94,7 @@ export function roundTripSpeed(v: number, theta: number): number {
 // The wind past the Earth, km/s far away, in the Earth's frame (it moves left, so the wind blows right).
 export type Model = 'still' | 'dragged'
 export const MODELS: [Model, string][] = [
-  ['still', 'Still ether (Fresnel, Lorentz)'],
+  ['still', 'Still ether (Fresnel)'],
   ['dragged', 'Dragged ether (Stokes)'],
 ]
 export const R_EARTH = 6371 // km
@@ -127,7 +127,8 @@ export function windDirection(model: Model, x: number, y: number): [number, numb
 
 // The experiments of section 4. A null result's limit follows from its own numbers: the shift goes as v², so
 // a run that saw at most a fraction f of the shift 30 km/s would give bounds the wind by 30 km/s × √f. The
-// modern resonators bound the anisotropy of light speed, Δc/c; the classical wind it allows is c √(Δc/c).
+// modern resonators bound how much light speed differs along and across a direction, Δc/c; a classical
+// wind makes that v²/2c², so the wind they allow is c √(2 Δc/c).
 export interface Experiment {
   id: string
   name: string
@@ -139,7 +140,7 @@ export interface Experiment {
   source: string
 }
 const fromFringes = (seen: number, expected: number) => V_ORBIT * Math.sqrt(seen / expected)
-const fromAnisotropy = (dcc: number) => (C * Math.sqrt(dcc)) / 1e3
+const fromAnisotropy = (dcc: number) => (C * Math.sqrt(2 * dcc)) / 1e3
 
 export const EXPERIMENTS: Experiment[] = [
   {
@@ -150,7 +151,7 @@ export const EXPERIMENTS: Experiment[] = [
     wind: fromFringes(0.01, 0.4),
     where: 'Cleveland, Ohio — an 11 m folded light path on a stone slab floating in mercury',
     result:
-      'Expected 0.4 of a fringe on turning 90°; saw at most about 0.01. They wrote that the Earth’s speed through the ether was probably under a sixth of its orbital speed.',
+      'Expected 0.4 of a fringe on turning 90°; saw certainly under a twentieth of that and probably under a fortieth, about 0.01. They wrote that the Earth’s speed through the ether was probably under a sixth of its orbital speed.',
     source: 'Michelson & Morley, American Journal of Science 34, 333 (1887)',
   },
   {
@@ -200,7 +201,7 @@ export const EXPERIMENTS: Experiment[] = [
     year: 2009,
     kind: 'limit',
     wind: fromAnisotropy(1e-17),
-    where: 'Berlin — two crossed optical resonators turning on a table, compared over a year',
+    where: 'Berlin — two crossed optical resonators turning on a table, recorded for over a year',
     result: 'Light speed was the same in every direction to about 1 part in 10¹⁷.',
     source: 'Herrmann et al., Physical Review D 80, 105011 (2009)',
   },
@@ -210,7 +211,7 @@ export const EXPERIMENTS: Experiment[] = [
     year: 2015,
     kind: 'limit',
     wind: fromAnisotropy(1e-18),
-    where: 'Berlin and Perth — cryogenic sapphire resonators, one of them turning, over a year',
+    where: 'A turning pair of crossed cryogenic sapphire microwave resonators, recorded for about a year',
     result: 'Light speed was the same in every direction to about 1 part in 10¹⁸.',
     source: 'Nagel et al., Nature Communications 6, 8174 (2015)',
   },
@@ -370,7 +371,7 @@ function OrbitSection() {
           still with the Sun, the Earth would meet a 30 km/s wind from straight ahead, turning with the seasons
           (the blue arrow; the small arrows are the other months). Measured against the cosmic microwave
           background — the nearest thing to a universal rest frame — the Sun itself moves at 370 km/s (orange),
-          so an ether at rest with it would blow at 340–400 km/s all year, strongest in December.
+          so an ether at rest with the CMB would blow at 340–400 km/s all year, strongest in December.
         </p>
       </figcaption>
       <div className="lp-controls">
@@ -406,7 +407,7 @@ function OrbitSection() {
             </div>
             <div>
               <dt>Measured</dt>
-              <dd>at most about 0.01 fringe — no wind, in any month (section 2)</dd>
+              <dd>probably at most 0.01 fringe — no wind, in any month (section 2)</dd>
             </div>
           </dl>
           <p className="lp-legend">
@@ -479,7 +480,7 @@ function PolarPlot({ v }: { v: number }) {
       <line className="ew-ring" x1={c} y1={c - 110} x2={c} y2={c + 110} />
       <text className="ew-label" x={4} y={14}>↕ across the wind: fastest</text>
       <text className="ew-label" x={4} y={IM + 16}>↔ along the wind: slowest</text>
-      <text className="ew-label ew-muted" x={4} y={IM + 34}>dashed circle: c every way (measured)</text>
+      <text className="ew-label ew-muted" x={4} y={IM + 34}>dashed circle: the mean, for scale</text>
     </svg>
   )
 }
@@ -501,7 +502,7 @@ function FringeChart({ ins, v, phi }: { ins: Instrument; v: number; phi: number 
       <p className="sem-axis-title">↑ Fringe position, fringes from its mean</p>
       <svg className="sem-plot" viewBox={`0 0 ${W} ${FC_H}`} role="img" aria-label={`Expected fringe shift against the interferometer's angle to the wind, ${ins.name}`}>
         {ins.id === 'mm1887' && (
-          <rect className="ew-measured" x={FC.l} y={sy(0.01)} width={FC.r - FC.l} height={Math.max(2, sy(-0.01) - sy(0.01))} />
+          <rect className="ew-measured" x={FC.l} y={sy(0.005)} width={FC.r - FC.l} height={Math.max(2, sy(-0.005) - sy(0.005))} />
         )}
         {yt.map((t) => (
           <g key={t}>
@@ -520,7 +521,7 @@ function FringeChart({ ins, v, phi }: { ins: Instrument; v: number; phi: number 
       <p className="sem-axis-title sem-x-title">Angle of arm 1 to the wind →</p>
       <ul className="skb-legend">
         <li><span className="lp-swatch ew-sw-expected" />Expected from a {kms(v)} wind</li>
-        {ins.id === 'mm1887' && <li><span className="lp-swatch ew-sw-measured" />Measured in 1887: within ±0.01</li>}
+        {ins.id === 'mm1887' && <li><span className="lp-swatch ew-sw-measured" />Measured in 1887: a swing of probably at most 0.01</li>}
         {ins.id === 'miller' && v !== 10 && <li><span className="lp-swatch ew-sw-claim" />Miller’s claimed 10 km/s</li>}
       </ul>
     </div>
@@ -534,6 +535,7 @@ function MichelsonSection() {
   const ins = INSTRUMENTS.find((i) => i.id === insId) as Instrument
   const full = expectedFringeShift(ins.arm, v * 1e3, ins.lambda)
   const b2 = (v * 1e3 / C) ** 2
+  const gain = polarPath(v, 74, 36).gain / 74
   return (
     <figure className="wave" id="michelson">
       <figcaption>
@@ -558,7 +560,7 @@ function MichelsonSection() {
           <dt>Light speed</dt>
           <dd>
             {sci(b2 / 2)} slower out and back along the wind than across it (Δc/c = v²/2c²); the polar plot
-            magnifies this ×{sci(polarPath(v, 74, 36).gain / 74)}
+            magnifies this ×{sci(gain)}
           </dd>
         </div>
         <div>
@@ -573,8 +575,7 @@ function MichelsonSection() {
       <FringeChart ins={ins} v={v} phi={phi} />
       <p className="muted sem-note">
         Michelson and Morley turned their stone slab slowly in mercury, reading the fringes at 16 marks a turn,
-        at noon and in the evening over several days in July 1887. They expected 0.4 of a fringe and saw at most
-        about 0.01 — and no later, more sensitive run has found a wind either (section 4).
+        at noon and in the evening over several days in July 1887. They expected 0.4 of a fringe and saw, they wrote, certainly under a twentieth and probably under a fortieth of it — about 0.01 — and no later, more sensitive run has found a wind either (section 4).
       </p>
     </figure>
   )
@@ -660,9 +661,8 @@ function FlowSection() {
       <figcaption>
         <h2>3. The wind past the Earth</h2>
         <p>
-          The same 30 km/s wind seen from the Earth, which moves to the left. In Fresnel’s and Lorentz’s still
-          ether the wind blows straight through the planet as if it were not there. Stokes (1845) supposed
-          instead that the Earth drags the ether along, like a ball moving through honey: the wind dies away to
+          The same 30 km/s wind seen from the Earth, which moves to the left. In Fresnel’s still ether the wind blows straight through the planet as if it were not there. Stokes (1845) supposed
+          instead that the Earth drags the ether along, like air carried along close to a moving train: the wind dies away to
           nothing at the ground and bends around the Earth, which would hide it from any experiment on the
           surface. Stokes gave no law for how the drag fades with height; here it fades over a chosen scale.
         </p>
@@ -693,7 +693,7 @@ function FlowSection() {
           </p>
           <p className="muted sem-note">
             {model === 'still'
-              ? 'A still ether predicts the full wind at the surface — the wind Michelson and Morley did not find.'
+              ? 'A still ether predicts the full wind at the surface — the wind Michelson and Morley did not find. Lorentz kept the still ether only by letting moving bodies shrink along their motion by exactly the amount that hides the wind, so that it can never be seen.'
               : 'A dragged ether hides the wind at the ground, but it fails elsewhere: Lorentz showed (1886) that it cannot both stick to the Earth and bend starlight by the observed aberration, and Hammar (1935) found no drag even inside heavy lead walls.'}
           </p>
         </div>
@@ -775,7 +775,7 @@ function MillerSection() {
           Dayton Miller, Morley’s collaborator, repeated the experiment on Mount Wilson in 1921 and 1925–26 with
           a 32 m light path and reported a real wind of about 10 km/s — the only positive result among the
           careful runs. Every other experiment, before and since, saw nothing; each mark below is the largest
-          wind its run could have missed. The modern ones are a million times tighter than Miller’s signal.
+          wind its run could have missed. The modern ones rule out a wind ten thousand times weaker than Miller’s.
         </p>
       </figcaption>
       <div className="lp-controls">
@@ -811,7 +811,8 @@ function MillerSection() {
       <p className="muted sem-note">
         The classical limits come from each run’s own numbers: the shift grows as the wind squared, so seeing at
         most a fraction f of the shift a 30 km/s wind would give limits the wind to 30 km/s × √f. The resonators
-        bound how much light speed varies with direction, Δc/c; a classical wind would make it about v²/c².
+        bound how much light speed differs along and across a direction, Δc/c; a classical wind would make it
+        v²/2c², so they bound the wind to c √(2 Δc/c).
       </p>
     </figure>
   )
@@ -833,7 +834,7 @@ const FINDINGS: Finding[] = [
   {
     id: 'resonators',
     title: 'Light speed is the same every way to 1 part in 10¹⁸',
-    text: 'Turning optical and microwave resonators, compared for a year as the Earth swings round its orbit and the Sun moves against the CMB, find no direction in which light runs faster — a classical wind of under 0.3 m/s, where 30 km/s was expected.',
+    text: 'Turning optical and microwave resonators, compared for a year as the Earth swings round its orbit and the Sun moves against the CMB, find no direction in which light runs faster — a classical wind of under half a metre per second, where 30 km/s was expected.',
     source: 'Herrmann et al., Physical Review D 80, 105011 (2009); Nagel et al., Nature Communications 6, 8174 (2015)',
   },
 ]

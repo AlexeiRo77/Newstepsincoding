@@ -34,7 +34,7 @@ test('the orbital wind is 30 km/s all year; with the CMB motion it swings 340–
   expect(cmb.indexOf(Math.min(...cmb))).toBe(5)
   // The Earth heads 90° west of the Sun: at the March equinox (Sun at 0°) it moves toward longitude 270°.
   const [vx, vy] = earthVelocity(2, 'sun')
-  expect(Math.atan2(vy, vx)).toBeLessThan(-Math.PI / 2 + 0.2)
+  expect((Math.atan2(vy, vx) * 180) / Math.PI).toBeCloseTo(-93, 0)
   expect(speed(earthVelocity(2, 'sun'))).toBeCloseTo(V_ORBIT, 6)
 })
 
