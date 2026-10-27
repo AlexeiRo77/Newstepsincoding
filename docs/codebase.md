@@ -24,7 +24,7 @@ the base to build them on. The login/logout design is a trimmed copy of the one 
 | `backend/tests/` | pytest suite (`test_*.py`) and the end-to-end `smoke.py` |
 | `frontend/src/auth.tsx` | `AuthProvider` / `useAuth()`: current user, login, signup, logout |
 | `frontend/src/api.ts` | `get` / `post` JSON helpers; errors become `ApiError` |
-| `frontend/src/App.tsx` | Routes: public `/login`, `/signup`, `/sky`, `/sky-body`, `/waves`, `/body-waves`, `/sound-em`, `/brain-emitters`, `/matter-ether`, `/tumor-waves`, `/thymus-waves`, `/light-pressure`; `/` and `/profile` behind `RequireAuth` |
+| `frontend/src/App.tsx` | Routes: public `/login`, `/signup`, `/sky`, `/sky-body`, `/waves`, `/body-waves`, `/sound-em`, `/brain-emitters`, `/matter-ether`, `/tumor-waves`, `/thymus-waves`, `/light-pressure`, `/ether-wind`; `/` and `/profile` behind `RequireAuth` |
 | `frontend/src/pages/Sky.tsx` | The 1977 sky page: draws the light matrix as SVG LEDs and lists the positions |
 | `frontend/src/pages/SkyBody.tsx` | The light matrix's light (from `GET /api/sky`) against the body's own radiation: one log-log chart of power per m² vs frequency, the numbers, and whether each body wave matches |
 | `frontend/src/pages/Waves.tsx` | Static SVG drawing of a brain, radio, sound and light wave with their real frequencies (frontend only) |
@@ -35,6 +35,7 @@ the base to build them on. The login/logout design is a trimmed copy of the one 
 | `frontend/src/pages/TumorWaves.tsx` | Garyaev's tumor-vibration hypothesis as a model: healthy and tumor signals built from seeded noise, decoded by a Welch-averaged DFT into one spectrum chart and a readings table, then three cards of what has been measured about tumors (frontend only) |
 | `frontend/src/pages/ThymusWaves.tsx` | The same hypothesis for the thymus, young against aged (fat-replaced): a 2D vibration map over the organ's two lobes, the decoded spectra and readings, then three cards of what has been measured about the thymus (frontend only) |
 | `frontend/src/pages/LightPressure.tsx` | Light pressure (I/c on an absorber, 2I/c on a mirror) of five real sources, laser pointer to the Sun: a 2D pressure map per source on one log colour scale, a log-log chart of pressure vs distance, a table of the numbers and three "Measured" cards (frontend only) |
+| `frontend/src/pages/EtherWind.tsx` | The ether wind a still ether predicts, drawn four ways beside what was measured: a top-down orbit map of the wind by month (Sun or CMB rest frame), the Michelson–Morley light-speed polar plot and fringe shift vs angle, the wind past the Earth for a still vs Stokes-dragged ether, and Miller's 1925 claim against the null limits by year (frontend only) |
 | `frontend/src/components/Spectrum.tsx` | What both Garyaev pages share: the seeded harmonic model signal, Welch decoding, the readings, the spectrum chart and the readings table; also the "Measured" cards, which `/light-pressure` uses too |
 | `frontend/src/components/WavePanel.tsx` | The captioned wave panel and path helper both wave pages draw with |
 | `frontend/src/pages/`, `frontend/src/components/` | Pages and the shared layout, form and login guard |

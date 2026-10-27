@@ -132,3 +132,11 @@ test('the light-pressure page is public: a signed-out visitor sees it', async ()
   expect(screen.getByRole('link', { name: 'Light pressure' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument()
 })
+
+test('the ether-wind page is public: a signed-out visitor sees it', async () => {
+  mockBackend()
+  renderAt('/ether-wind')
+  expect(await screen.findByRole('heading', { name: 'The ether wind in 2D' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Ether wind' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument()
+})

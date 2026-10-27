@@ -3,6 +3,7 @@ import Layout from './components/Layout'
 import RequireAuth from './components/RequireAuth'
 import BodyWaves from './pages/BodyWaves'
 import BrainEmitters from './pages/BrainEmitters'
+import EtherWind from './pages/EtherWind'
 import Home from './pages/Home'
 import LightPressure from './pages/LightPressure'
 import Login from './pages/Login'
@@ -33,6 +34,7 @@ export default function App() {
         <Route path="/tumor-waves" element={<TumorWaves />} />
         <Route path="/thymus-waves" element={<ThymusWaves />} />
         <Route path="/light-pressure" element={<LightPressure />} />
+        <Route path="/ether-wind" element={<EtherWind />} />
       </Route>
       <Route element={<RequireAuth />}>
         <Route element={<Layout />}>
