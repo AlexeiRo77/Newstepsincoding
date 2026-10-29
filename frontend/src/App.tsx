@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import RequireAuth from './components/RequireAuth'
+import Aura from './pages/Aura'
 import BodyWaves from './pages/BodyWaves'
 import BrainEmitters from './pages/BrainEmitters'
 import EtherWind from './pages/EtherWind'
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/thymus-waves" element={<ThymusWaves />} />
         <Route path="/light-pressure" element={<LightPressure />} />
         <Route path="/ether-wind" element={<EtherWind />} />
+        <Route path="/aura" element={<Aura />} />
       </Route>
       <Route element={<RequireAuth />}>
         <Route element={<Layout />}>

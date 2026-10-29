@@ -350,3 +350,33 @@ dd { margin: 0; overflow-wrap: anywhere; }
   .ew-pair { grid-template-columns: 1fr; }
   .ew-orbit .ew-label, .ew-month { font-size: 14px; }
 }
+
+.au-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.au-pair h3 { margin: 0 0 6px; font-size: 1.05rem; }
+.au-pair .lp-choices { margin: 8px 0 0; }
+.au-pair .lp-choices button { padding: 4px 8px; font-size: 0.85rem; }
+.au-figure { display: block; width: 100%; height: auto; }
+.au-sky { fill: #0d1b2a; }
+.au-ring { fill: none; stroke-width: 4; stroke-opacity: 0.8; cursor: pointer; }
+.au-ring-on { stroke-width: 7; stroke-opacity: 1; }
+.au-body circle, .au-body path { fill: #cfd8dc; }
+.au-body .au-limb { fill: none; stroke: #cfd8dc; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
+.au-body .au-leg { stroke-width: 28; }
+.au-facts div { grid-template-columns: 6em 1fr; }
+.au-legend { margin: 16px 0 0; font-size: 0.85rem; }
+.au-ramp { position: relative; display: block; height: 14px; border-radius: 2px; border: 1px solid var(--border); }
+.au-visible { position: absolute; top: -3px; bottom: -3px; min-width: 6px; border: 1px solid #000;
+  background: linear-gradient(90deg, #e53935, #fdd835, #43a047, #1e88e5, #ab47bc); }
+.au-band rect { fill-opacity: 0.18; }
+.au-band text { font: 600 13px system-ui, sans-serif; }
+.au-band-hunt rect { fill: #ef6c00; }
+.au-band-hunt text { fill: #e65100; }
+.au-band-colour rect { fill: #ab47bc; }
+.au-band-colour text { fill: #7b1fa2; }
+.au-point circle { stroke: #000; stroke-width: 1; }
+.au-point text { font: 600 13px system-ui, sans-serif; fill: var(--fg); }
+@media (max-width: 480px) {
+  .au-pair { grid-template-columns: 1fr; }
+  .au-scroll { overflow-x: auto; }
+  .au-scroll .sem-plot { min-width: 640px; }
+}

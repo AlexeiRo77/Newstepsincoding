@@ -140,3 +140,11 @@ test('the ether-wind page is public: a signed-out visitor sees it', async () => 
   expect(screen.getByRole('link', { name: 'Ether wind' })).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument()
 })
+
+test('the aura page is public: a signed-out visitor sees it', async () => {
+  mockBackend()
+  renderAt('/aura')
+  expect(await screen.findByRole('heading', { name: 'The human aura in 2D' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Aura' })).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: 'Log in' })).toBeInTheDocument()
+})
