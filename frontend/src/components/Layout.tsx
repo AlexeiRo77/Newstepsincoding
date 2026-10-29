@@ -37,6 +37,7 @@ export default function Layout() {
           <NavLink to="/thymus-waves">Thymus vibrations</NavLink>
           <NavLink to="/light-pressure">Light pressure</NavLink>
           <NavLink to="/ether-wind">Ether wind</NavLink>
+          <NavLink to="/aura">Aura</NavLink>
         </nav>
         {user && (
           <>

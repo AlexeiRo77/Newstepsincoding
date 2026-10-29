@@ -233,7 +233,7 @@ function Arrow({ x, y, a, len, className }: { x: number; y: number; a: number; l
   )
 }
 
-function Choices<T extends string | number>({
+export function Choices<T extends string | number>({
   label,
   options,
   value,
