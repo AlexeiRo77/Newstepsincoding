@@ -45,7 +45,7 @@ test('the body state moves the heart and brain frequencies and the muscle vibrat
   expect(vibrationDb(layer('exercise', 'emg'))).toBeGreaterThan(vibrationDb(layer('sleep', 'emg')) + 30)
 })
 
-test('every claimed aura colour is visible light, far from Hunt’s band and every measured field', () => {
+test('every claimed aura colour is visible light; muscle electricity sits inside Hunt’s band', () => {
   expect(CLAIMED).toHaveLength(7)
   for (const c of CLAIMED) {
     expect(claimedFreq(c)).toBeGreaterThan(4e14)
@@ -83,7 +83,7 @@ test('the page redraws by body state and layer', () => {
   fireEvent.click(document.querySelector('svg[data-side="measured"] [data-layer="heat"]') as Element)
   expect(screen.getByTestId('measured-detail').textContent).toMatch(/^Heat \(infrared\)/)
 
-  expect(screen.getByTestId('claimed-detail').textContent).toMatch(/Etheric bodyColourRed, 680 nm/)
+  expect(screen.getByTestId('claimed-detail').textContent).toMatch(/Etheric bodyColourRed, 680 nm \(popular chakra pairing\)Brennan’sblue-grey/)
   fireEvent.click(screen.getByRole('button', { name: 'Ketheric template' }))
   expect(screen.getByTestId('claimed-detail').textContent).toMatch(/Violet, 410 nm.*730 THz/)
   for (const id of ['readers', 'kirlian', 'glow'])

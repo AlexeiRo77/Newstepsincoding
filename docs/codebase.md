@@ -38,6 +38,7 @@ the base to build them on. The login/logout design is a trimmed copy of the one 
 | `frontend/src/pages/EtherWind.tsx` | The ether wind a still ether predicts, drawn four ways beside what was measured: a top-down orbit map of the wind by month (Sun or CMB rest frame), the Michelson–Morley light-speed polar plot and fringe shift vs angle, the wind past the Earth for a still vs Stokes-dragged ether, and Miller's 1925 claim against the null limits by year (frontend only) |
 | `frontend/src/pages/Aura.tsx` | The human aura in 2D: the esoteric seven-layer aura beside the body's measured emissions (heat, microwaves, biophotons, ECG/EEG/EMG, heart and brain magnetism), each a ring around a body with colour = frequency and ripple = vibration (dB above the sensor's noise), by body state; a frequency × vibration chart against the claimed aura bands; three "Measured" cards (frontend only) |
 | `frontend/src/components/Spectrum.tsx` | What both Garyaev pages share: the seeded harmonic model signal, Welch decoding, the readings, the spectrum chart and the readings table; also the "Measured" cards, which `/light-pressure` uses too |
+| `frontend/src/components/Choices.tsx` | The row of toggle buttons the interactive pages pick options with (`/ether-wind`, `/aura`) |
 | `frontend/src/components/WavePanel.tsx` | The captioned wave panel and path helper both wave pages draw with |
 | `frontend/src/pages/`, `frontend/src/components/` | Pages and the shared layout, form and login guard |
 | `frontend/src/styles.css` | All styling (plain CSS, no framework) |

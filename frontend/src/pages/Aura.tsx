@@ -5,9 +5,9 @@
 // the measured layers on one frequency × vibration plane against the claimed aura frequencies, and three
 // "Measured" cards say what tests of the aura found. Everything is computed here; no API call.
 import { useState } from 'react'
+import Choices from '../components/Choices'
 import { type Finding, MeasuredCards } from '../components/Spectrum'
 import { W } from '../components/WavePanel'
-import { Choices } from './EtherWind'
 import { C, pow10, sci } from './LightPressure'
 
 const SIGMA = 5.670_374e-8 // Stefan–Boltzmann constant, W/(m²·K⁴)
@@ -23,7 +23,8 @@ export const STATES: [State, string][] = [
 ]
 
 // What changes with the body's state: skin temperature, heart rate, the dominant brain rhythm and its size
-// on the scalp, and how hard the muscles are working.
+// on the scalp, and how hard the muscles are working. Typical values: MEG and clean EEG need a still
+// subject, so the exercise figures are what the rhythms would give, not readings taken mid-exercise.
 interface Physiology {
   skin: number // K
   heart: number // Hz
@@ -62,9 +63,12 @@ export const vibrationDb = (l: Pick<Layer, 'value' | 'floor' | 'kind'>) =>
   (l.kind === 'field' ? 20 : 10) * Math.log10(l.value / l.floor)
 
 const volts = (v: number) => (v >= 1e-3 ? `${sci(v * 1e3)} mV` : `${sci(v * 1e6)} µV`)
+// Noise floors are for about a 1 Hz bandwidth, the slow rhythms' own.
+const ELECTRODES = 'Skin electrodes (≈1 µV noise, ~1 Hz band)'
+const SQUID = 'SQUID magnetometer in a shielded room (≈5 fT/√Hz)'
 const tesla = (t: number) => (t >= 1e-12 ? `${sci(t * 1e12)} pT` : `${sci(t * 1e15)} fT`)
 
-// Inside out, as they sit around the body (the gaps between the rings are illustrative).
+// In ring order from the body outward; the order and the gaps are illustrative, each layer's reach is in `reach`.
 export function measuredLayers(state: State): Layer[] {
   const p = PHYSIOLOGY[state]
   const heat = skinPower(p.skin)
@@ -74,11 +78,11 @@ export function measuredLayers(state: State): Layer[] {
       name: 'Visible glow (biophotons)',
       short: 'Biophotons',
       freq: C / 550e-9,
-      value: 1e-11,
-      floor: 1e-12,
+      value: 1e-12,
+      floor: 1e-14,
       kind: 'power',
-      show: 'about 10⁻¹¹ W/m² — a few thousand photons per second per cm²',
-      sensor: 'Cooled CCD camera, long exposures in total darkness',
+      show: 'about 10⁻¹² W/m² — a few hundred photons per second per cm²',
+      sensor: 'Cooled CCD camera, long exposures in total darkness (≈10⁻¹⁴ W/m²)',
       reach: 'Leaves the skin; the only visible light the body makes',
       source: 'Kobayashi, Kikuchi & Okamura, PLoS ONE 4, e6256 (2009)',
     },
@@ -91,7 +95,7 @@ export function measuredLayers(state: State): Layer[] {
       floor: 1e-6,
       kind: 'field',
       show: `${volts(p.emg)} at the skin`,
-      sensor: 'Skin electrodes (≈1 µV noise)',
+      sensor: ELECTRODES,
       reach: 'Measured on the skin over the muscle',
       source: 'De Luca, Journal of Applied Biomechanics 13, 135 (1997)',
     },
@@ -101,10 +105,10 @@ export function measuredLayers(state: State): Layer[] {
       short: 'Heart (ECG)',
       freq: p.heart,
       value: 1e-3,
-      floor: 5e-6,
+      floor: 1e-6,
       kind: 'field',
       show: '1 mV at the skin (R wave)',
-      sensor: 'Skin electrodes (≈5 µV noise)',
+      sensor: ELECTRODES,
       reach: 'Over the whole skin; read on the chest and limbs',
       source: 'Malmivuo & Plonsey, Bioelectromagnetism, ch. 15 (1995)',
     },
@@ -117,7 +121,7 @@ export function measuredLayers(state: State): Layer[] {
       floor: 1e-6,
       kind: 'field',
       show: `${volts(p.eeg)} on the scalp (${p.brainBand} rhythm)`,
-      sensor: 'Scalp electrodes (≈1 µV noise)',
+      sensor: ELECTRODES,
       reach: 'On the scalp only',
       source: 'Niedermeyer & Lopes da Silva, Electroencephalography, 5th ed. (2005)',
     },
@@ -129,7 +133,7 @@ export function measuredLayers(state: State): Layer[] {
       value: heat,
       floor: 4 * SKIN_EMISSIVITY * SIGMA * p.skin ** 3 * NETD,
       kind: 'power',
-      show: `${Math.round(heat)} W/m² from skin at ${(p.skin - 273.15).toFixed(0)} °C`,
+      show: `${Math.round(heat)} W/m² out from skin at ${(p.skin - 273.15).toFixed(0)} °C (net loss to a 20 °C room: ${Math.round(heat - skinPower(293.15))} W/m²); peak per unit frequency, ${(C / heatPeak(p.skin) * 1e6).toFixed(0)} µm`,
       sensor: `Thermal camera (sees ${NETD} K steps)`,
       reach: 'Radiates away; a thermal camera sees it across a room',
       source: 'Stefan–Boltzmann and Wien laws; skin emissivity 0.98',
@@ -156,7 +160,7 @@ export function measuredLayers(state: State): Layer[] {
       floor: 5e-15,
       kind: 'field',
       show: `${tesla(p.meg)} just outside the head (${p.brainBand} rhythm)`,
-      sensor: 'SQUID magnetometer in a shielded room (5 fT)',
+      sensor: SQUID,
       reach: 'A few cm outside the head',
       source: 'Hämäläinen et al., Reviews of Modern Physics 65, 413 (1993)',
     },
@@ -168,8 +172,8 @@ export function measuredLayers(state: State): Layer[] {
       value: 50e-12,
       floor: 5e-15,
       kind: 'field',
-      show: '50 pT just outside the chest — the body’s strongest field',
-      sensor: 'SQUID magnetometer in a shielded room (5 fT)',
+      show: '50 pT just outside the chest — the body’s strongest magnetic field',
+      sensor: SQUID,
       reach: 'Tens of cm from the chest before it sinks under the noise',
       source: 'Malmivuo & Plonsey, Bioelectromagnetism, ch. 20 (1995)',
     },
@@ -184,16 +188,17 @@ export interface Claimed {
   colour: string
   css: string
   lambda: number // m
+  brennan: string // the colour Brennan herself gives the layer
   holds: string
 }
 export const CLAIMED: Claimed[] = [
-  { id: 'etheric', name: 'Etheric body', colour: 'Red', css: '#e53935', lambda: 680e-9, holds: 'physical sensation' },
-  { id: 'emotional', name: 'Emotional body', colour: 'Orange', css: '#fb8c00', lambda: 610e-9, holds: 'feelings about oneself' },
-  { id: 'mental', name: 'Mental body', colour: 'Yellow', css: '#fdd835', lambda: 580e-9, holds: 'thoughts' },
-  { id: 'astral', name: 'Astral body', colour: 'Green', css: '#43a047', lambda: 530e-9, holds: 'love and relationships' },
-  { id: 'etheric-template', name: 'Etheric template', colour: 'Blue', css: '#1e88e5', lambda: 470e-9, holds: 'will' },
-  { id: 'celestial', name: 'Celestial body', colour: 'Indigo', css: '#5c6bc0', lambda: 440e-9, holds: 'spiritual feeling' },
-  { id: 'ketheric', name: 'Ketheric template', colour: 'Violet', css: '#ab47bc', lambda: 410e-9, holds: 'the higher mind' },
+  { id: 'etheric', name: 'Etheric body', colour: 'Red', css: '#e53935', lambda: 680e-9, brennan: 'blue-grey', holds: 'physical sensation' },
+  { id: 'emotional', name: 'Emotional body', colour: 'Orange', css: '#fb8c00', lambda: 610e-9, brennan: 'all colours, shifting', holds: 'feelings about oneself' },
+  { id: 'mental', name: 'Mental body', colour: 'Yellow', css: '#fdd835', lambda: 580e-9, brennan: 'yellow', holds: 'thoughts' },
+  { id: 'astral', name: 'Astral body', colour: 'Green', css: '#43a047', lambda: 530e-9, brennan: 'rose', holds: 'love and relationships' },
+  { id: 'etheric-template', name: 'Etheric template', colour: 'Blue', css: '#1e88e5', lambda: 470e-9, brennan: 'cobalt blue', holds: 'will' },
+  { id: 'celestial', name: 'Celestial body', colour: 'Indigo', css: '#5c6bc0', lambda: 440e-9, brennan: 'opalescent pastels', holds: 'spiritual feeling' },
+  { id: 'ketheric', name: 'Ketheric template', colour: 'Violet', css: '#ab47bc', lambda: 410e-9, brennan: 'gold and silver', holds: 'the higher mind' },
 ]
 export const claimedFreq = (c: Claimed) => C / c.lambda
 
@@ -206,7 +211,7 @@ const F_HI = 15
 const RAMP = ['#6a4c93', '#1982c4', '#00b4d8', '#8ac926', '#ffca3a', '#ff595e']
 const hex = (s: string) => [1, 3, 5].map((i) => Number.parseInt(s.slice(i, i + 2), 16))
 export function freqColour(f: number): string {
-  const t = Math.min(1, Math.max(0, (Math.log10(f) - F_LO) / (F_HI - F_LO))) * (RAMP.length - 1)
+  const t = Math.min(1, Math.max(0, (Math.log10(Math.max(f, 1e-3)) - F_LO) / (F_HI - F_LO))) * (RAMP.length - 1)
   const i = Math.min(RAMP.length - 2, Math.floor(t))
   const [a, b] = [hex(RAMP[i]), hex(RAMP[i + 1])]
   return `rgb(${a.map((v, k) => Math.round(v + (b[k] - v) * (t - i))).join(',')})`
@@ -214,18 +219,19 @@ export function freqColour(f: number): string {
 
 // Ripples per ring grow with the frequency; their height with the vibration (decibels above the noise).
 export const rippleCount = (f: number) => Math.max(3, Math.round(4 + 2.2 * Math.log10(f)))
-const AMP_MAX = 11
+const AMP_MAX = 6
 export const rippleHeight = (db: number) => (Math.min(100, Math.max(0, db)) / 100) * AMP_MAX
-const CLAIMED_HEIGHT = 4 // the claimed layers have no strength: drawn evenly
+const CLAIMED_HEIGHT = 3 // the claimed layers have no strength: drawn evenly
 
-// --- The two figures: a body inside rings, one ring per layer. 360 × 500 viewBox.
-const FW = 360
-const FH = 500
+// --- The two figures: a body inside rings, one ring per layer. 420 × 600 viewBox. Rings sit GAP apart,
+// more than two ripple heights, so neighbours never cross.
+const FW = 420
+const FH = 600
 const CX = FW / 2
-const CY = 250
-const A0 = 84
-const B0 = 168
-const GAP = 9
+const CY = 300
+const A0 = 98
+const B0 = 188
+const GAP = 2 * AMP_MAX + 4
 
 // An ellipse around the body whose edge ripples k times round, h units high.
 export function ringPath(i: number, k: number, h: number): string {
@@ -242,12 +248,12 @@ export function ringPath(i: number, k: number, h: number): string {
 function Body() {
   return (
     <g className="au-body">
-      <circle cx={CX} cy={104} r={26} />
-      <path d={`M${CX - 50},146 Q${CX},134 ${CX + 50},146 L${CX + 40},300 Q${CX},312 ${CX - 40},300 Z`} />
-      <polyline className="au-limb" points={`${CX - 44},156 ${CX - 70},228 ${CX - 76},300`} />
-      <polyline className="au-limb" points={`${CX + 44},156 ${CX + 70},228 ${CX + 76},300`} />
-      <polyline className="au-limb au-leg" points={`${CX - 20},300 ${CX - 24},366 ${CX - 26},412`} />
-      <polyline className="au-limb au-leg" points={`${CX + 20},300 ${CX + 24},366 ${CX + 26},412`} />
+      <circle cx={CX} cy={CY - 146} r={26} />
+      <path d={`M${CX - 50},${CY - 104} Q${CX},${CY - 116} ${CX + 50},${CY - 104} L${CX + 40},${CY + 50} Q${CX},${CY + 62} ${CX - 40},${CY + 50} Z`} />
+      <polyline className="au-limb" points={`${CX - 44},${CY - 94} ${CX - 70},${CY - 22} ${CX - 76},${CY + 50}`} />
+      <polyline className="au-limb" points={`${CX + 44},${CY - 94} ${CX + 70},${CY - 22} ${CX + 76},${CY + 50}`} />
+      <polyline className="au-limb au-leg" points={`${CX - 20},${CY + 50} ${CX - 24},${CY + 116} ${CX - 26},${CY + 162}`} />
+      <polyline className="au-limb au-leg" points={`${CX + 20},${CY + 50} ${CX + 24},${CY + 116} ${CX + 26},${CY + 162}`} />
     </g>
   )
 }
@@ -320,6 +326,7 @@ function Facts({ rows }: { rows: [string, string][] }) {
 const hz = (f: number) => {
   if (f >= 1e12) return `${sci(f / 1e12)} THz`
   if (f >= 1e9) return `${sci(f / 1e9)} GHz`
+  if (f >= 1e6) return `${sci(f / 1e6)} MHz`
   if (f >= 1e3) return `${sci(f / 1e3)} kHz`
   return `${sci(f)} Hz`
 }
@@ -350,7 +357,8 @@ function AuraSection({ state, setState }: { state: State; setState: (s: State) =
           Left, the aura as the esoteric sources describe it: seven layers around the body, each said to vibrate
           faster than the one inside it. Right, everything the body is measured to give off, drawn the same way.
           In both, a ring’s colour is its frequency and its ripples its vibration — tighter for a higher
-          frequency, taller for a stronger signal. Click a ring, or pick it below.
+          frequency, taller for a stronger signal. The seven claimed colours span less than a factor of two in
+          frequency, so their ripples look alike. Click a ring, or pick it below.
         </p>
       </figcaption>
       <div className="lp-controls">
@@ -367,8 +375,9 @@ function AuraSection({ state, setState }: { state: State; setState: (s: State) =
           <div className="ew-detail" data-testid="claimed-detail">
             <h3>{cl.name}</h3>
             <Facts rows={[
-              ['Colour', `${cl.colour}, ${Math.round(cl.lambda * 1e9)} nm`],
-              ['Frequency', `${hz(claimedFreq(cl))} (the colour’s light)`],
+              ['Colour', `${cl.colour}, ${Math.round(cl.lambda * 1e9)} nm (popular chakra pairing)`],
+              ['Brennan’s', cl.brennan],
+              ['Frequency', `${hz(claimedFreq(cl))} (the drawn colour’s light)`],
               ['Vibration', 'Said to be higher than the layer inside; no strength given'],
               ['Said to hold', cl.holds],
               ['Source', 'Brennan, Hands of Light (1987); chakra colours as popular accounts pair them'],
@@ -410,9 +419,13 @@ const X_HI = 16
 // clears every point and every label already placed.
 type Box = [number, number, number, number] // x0, y0, x1, y1
 const hits = (a: Box, b: Box) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3]
-export function placeLabels(pts: { x: number; y: number; text: string }[], area: { l: number; r: number; t: number; b: number }) {
+export function placeLabels(
+  pts: { x: number; y: number; text: string }[],
+  area: { l: number; r: number; t: number; b: number },
+  reserved: Box[] = [],
+) {
   const dots: Box[] = pts.map(({ x, y }) => [x - 8, y - 8, x + 8, y + 8])
-  const taken: Box[] = []
+  const taken: Box[] = [...reserved]
   return pts.map(({ x, y, text }, i) => {
     const w = 7.5 * text.length
     const spots: { x: number; y: number; anchor: 'start' | 'end' | 'middle'; box: Box }[] = [
@@ -435,13 +448,18 @@ export function placeLabels(pts: { x: number; y: number; text: string }[], area:
 
 function VibrationChart({ layers }: { layers: Layer[] }) {
   const sx = (f: number) => P.l + ((Math.log10(f) - X_LO) / (X_HI - X_LO)) * (P.r - P.l)
-  const sy = (db: number) => P.b - (db / 100) * (P.b - P.t)
+  const sy = (db: number) => P.b - (Math.min(100, Math.max(0, db)) / 100) * (P.b - P.t)
   const bands: [number, number, string, string, 'start' | 'end'][] = [
     [HUNT_BAND[0], HUNT_BAND[1], 'au-band-hunt', 'Hunt’s “aura frequencies”', 'start'],
     [C / 750e-9, C / 400e-9, 'au-band-colour', 'Aura colours', 'end'],
   ]
   const points = layers.map((l) => ({ l, x: sx(l.freq), y: sy(vibrationDb(l)) }))
-  const labels = placeLabels(points.map(({ l, x, y }) => ({ x, y, text: l.short })), P)
+  // The band labels sit along the top; the point labels keep clear of them.
+  const bandBoxes = bands.map(([lo, hi, , label, anchor]): Box => {
+    const w = 7.5 * label.length
+    return anchor === 'start' ? [sx(hi) + 4, P.t + 6, sx(hi) + 4 + w, P.t + 22] : [sx(lo) - 4 - w, P.t + 6, sx(lo) - 4, P.t + 22]
+  })
+  const labels = placeLabels(points.map(({ l, x, y }) => ({ x, y, text: l.short })), P, bandBoxes)
   return (
     <div className="sem-chart">
       <p className="sem-axis-title">↑ Vibration: dB above the best sensor’s noise</p>
@@ -488,14 +506,17 @@ function ChartSection({ state }: { state: State }) {
           The measured layers on one plane, for the body state chosen above. The shaded bands are where the aura
           is claimed to be. The seven aura colours fall in one thin band of visible light, where the only thing
           the body gives off is the biophoton glow, about a thousand times too faint for any eye. Valerie Hunt’s
-          “aura frequencies” of {HUNT_BAND[0]}–{HUNT_BAND[1]} Hz, read with skin electrodes (UCLA, 1977), fall in
-          the band of ordinary muscle electricity, which the same electrodes pick up.
+          “aura frequencies” of {HUNT_BAND[0]}–{HUNT_BAND[1]} Hz, read with skin electrodes, fall in the band of
+          ordinary muscle electricity, which the same electrodes pick up. (Hunt, Massey, Weinberg, Bruyere & Hahn,
+          “A Study of Structural Integration from Neuromuscular, Energy Field, and Emotional Approaches”, UCLA
+          report, 1977; not peer reviewed.)
         </p>
       </figcaption>
       <VibrationChart layers={measuredLayers(state)} />
       <p className="muted sem-note">
         Fields (volts, tesla) count 20 dB per factor of ten in amplitude, powers 10 dB. Heat and microwaves are
-        drawn at their peak and at a typical radiometer frequency; both are one smooth thermal spectrum.
+        drawn at their peak per unit frequency (18 THz, about 17 µm; the often-quoted 9.5 µm is the peak per unit
+        wavelength) and at a typical radiometer frequency; both are one smooth thermal spectrum.
       </p>
     </figure>
   )
@@ -511,7 +532,7 @@ const FINDINGS: Finding[] = [
   {
     id: 'kirlian',
     title: 'Kirlian “aura” photos follow moisture',
-    text: 'The glowing halo of a fingertip in Kirlian (corona discharge) photography changed with the moisture on the finger, and vanished as a cue to mood or health once moisture was held fixed.',
+    text: 'The glowing halo of a fingertip in Kirlian (corona discharge) photography changed with the moisture on the finger; the changes credited to emotional state followed from sweating.',
     source: 'Pehek, Kyler & Faust, Science 194, 263 (1976)',
   },
   {

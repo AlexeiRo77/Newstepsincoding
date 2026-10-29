@@ -6,6 +6,7 @@
 // for Stokes' dragged one. (4) Miller's claimed 10 km/s against the null results before and after.
 // Everything is computed here; no API call.
 import { useState } from 'react'
+import Choices from '../components/Choices'
 import { type Finding, MeasuredCards } from '../components/Spectrum'
 import { W } from '../components/WavePanel'
 import { C, pow10, sci } from './LightPressure'
@@ -230,28 +231,6 @@ function Arrow({ x, y, a, len, className }: { x: number; y: number; a: number; l
       <line x1={x} y1={y} x2={ex} y2={ey} />
       <path d={`M${wing(1)} L${ex},${ey} L${wing(-1)}`} />
     </g>
-  )
-}
-
-export function Choices<T extends string | number>({
-  label,
-  options,
-  value,
-  onChange,
-}: {
-  label: string
-  options: [T, string][]
-  value: T
-  onChange: (v: T) => void
-}) {
-  return (
-    <div className="lp-choices" role="group" aria-label={label}>
-      {options.map(([v, text]) => (
-        <button key={String(v)} type="button" aria-pressed={v === value} onClick={() => onChange(v)}>
-          {text}
-        </button>
-      ))}
-    </div>
   )
 }
 
